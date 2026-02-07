@@ -15,6 +15,14 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
 import { PayloadDto } from './auth/types/jwtPayload.dto';
 
+/**
+ * Returns whether GraphQL Playground should be enabled.
+ * Disabled in production for security, enabled in development.
+ */
+export function getPlaygroundConfig(): boolean {
+  return process.env.NODE_ENV !== 'production';
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -30,7 +38,7 @@ import { PayloadDto } from './auth/types/jwtPayload.dto';
         return {
           autoSchemaFile: 'schema.gql',
           sortSchema: true,
-          playground: true,
+          playground: getPlaygroundConfig(),
           buildSchemaOptions: { numberScalarMode: 'integer' },
           context: async ({ req, res }: { req: Request; res: Response }) => {
             const token =
