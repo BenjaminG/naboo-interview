@@ -30,7 +30,7 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async ({
 
     return { props: { activities: response.data.getLatestActivities } };
   } catch (error) {
-    console.error("[SSR] Failed to fetch latest activities:", error);
+    console.error("Failed to fetch latest activities:", error);
     return { props: { activities: [], error: true } };
   }
 };
