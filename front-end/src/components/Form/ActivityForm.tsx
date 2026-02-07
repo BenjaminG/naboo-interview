@@ -34,7 +34,9 @@ export default function ActivityForm() {
   const [createActivity] = useMutation<
     CreateActivityMutation,
     CreateActivityMutationVariables
-  >(CreateActivity);
+  >(CreateActivity, {
+    refetchQueries: ['GetActivities', 'GetLatestActivities', 'GetActivitiesByCity'],
+  });
 
   const form = useForm<CreateActivityInput>({
     initialValues: {
