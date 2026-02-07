@@ -52,7 +52,7 @@ export const getServerSideProps: GetServerSideProps<CityDetailsProps> = async ({
       },
     };
   } catch (error) {
-    console.error("[SSR] Failed to fetch activities by city:", error);
+    console.error("Failed to fetch activities by city:", error);
     return {
       props: { activities: [], city: params.city, error: true },
     };

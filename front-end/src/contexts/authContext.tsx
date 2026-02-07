@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setIsLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // mount-only: getUser is stable (Apollo), user check is inside
+  }, []);
 
   const handleSignin = useCallback(
     async (input: SignInInput) => {

@@ -29,7 +29,7 @@ export const getServerSideProps: GetServerSideProps<DiscoverProps> = async ({
     });
     return { props: { activities: response.data.getActivities } };
   } catch (error) {
-    console.error("[SSR] Failed to fetch activities:", error);
+    console.error("Failed to fetch activities:", error);
     return { props: { activities: [], error: true } };
   }
 };

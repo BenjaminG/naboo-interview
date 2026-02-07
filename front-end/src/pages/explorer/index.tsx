@@ -27,7 +27,7 @@ export const getServerSideProps: GetServerSideProps<ExplorerProps> = async ({
     });
     return { props: { cities: response.data.getCities } };
   } catch (error) {
-    console.error("[SSR] Failed to fetch cities:", error);
+    console.error("Failed to fetch cities:", error);
     return { props: { cities: [], error: true } };
   }
 };
