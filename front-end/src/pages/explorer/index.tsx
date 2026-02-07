@@ -1,11 +1,11 @@
-import { City, EmptyData, PageTitle } from "@/components";
+import { City, EmptyData, PageTitle, ServiceErrorAlert } from "@/components";
 import { createSSRClient } from "@/graphql/apollo";
 import {
   GetCitiesQuery,
   GetCitiesQueryVariables,
 } from "@/graphql/generated/types";
 import GetCities from "@/graphql/queries/city/getCities";
-import { Alert, Flex } from "@mantine/core";
+import { Flex } from "@mantine/core";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 
@@ -26,7 +26,8 @@ export const getServerSideProps: GetServerSideProps<ExplorerProps> = async ({
       query: GetCities,
     });
     return { props: { cities: response.data.getCities } };
-  } catch {
+  } catch (error) {
+    console.error("[SSR] Failed to fetch cities:", error);
     return { props: { cities: [], error: true } };
   }
 };
@@ -38,12 +39,7 @@ export default function Explorer({ cities, error }: ExplorerProps) {
         <title>Explorer | CDTR</title>
       </Head>
       <PageTitle title="Trouvez une activité dans votre ville" />
-      {error && (
-        <Alert color="red" mb="md">
-          Le service est temporairement indisponible. Veuillez réessayer plus
-          tard.
-        </Alert>
-      )}
+      <ServiceErrorAlert show={error} />
       <Flex direction="column" gap="1rem">
         {cities.length > 0 ? (
           cities.map((city) => <City city={city} key={city} />)
