@@ -1,7 +1,7 @@
 import { Activity, PageTitle } from "@/components";
-import { graphqlClient } from "@/graphql/apollo";
+import { createSSRClient } from "@/graphql/apollo";
 import { useGlobalStyles } from "@/utils";
-import { Button, Flex, Grid, Text } from "@mantine/core";
+import { Alert, Button, Flex, Grid, Text } from "@mantine/core";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
@@ -13,20 +13,28 @@ import GetLatestActivities from "@/graphql/queries/activity/getLatestActivities"
 
 interface HomeProps {
   activities: GetLatestActivitiesQuery["getLatestActivities"];
+  error?: boolean;
 }
 
-export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
-  const response = await graphqlClient.query<
-    GetLatestActivitiesQuery,
-    GetLatestActivitiesQueryVariables
-  >({
-    query: GetLatestActivities,
-  });
+export const getServerSideProps: GetServerSideProps<HomeProps> = async ({
+  req,
+}) => {
+  try {
+    const client = createSSRClient(req.headers.cookie);
+    const response = await client.query<
+      GetLatestActivitiesQuery,
+      GetLatestActivitiesQueryVariables
+    >({
+      query: GetLatestActivities,
+    });
 
-  return { props: { activities: response.data.getLatestActivities } };
+    return { props: { activities: response.data.getLatestActivities } };
+  } catch {
+    return { props: { activities: [], error: true } };
+  }
 };
 
-export default function Home({ activities }: HomeProps) {
+export default function Home({ activities, error }: HomeProps) {
   const { classes } = useGlobalStyles();
 
   return (
@@ -39,6 +47,12 @@ export default function Home({ activities }: HomeProps) {
       </Head>
       <main>
         <PageTitle title="Accueil" />
+        {error && (
+          <Alert color="red" mb="md">
+            Le service est temporairement indisponible. Veuillez réessayer plus
+            tard.
+          </Alert>
+        )}
         <Text>
           Sed ut perspiciatis unde omnis iste natus error sit voluptatem
           accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae
