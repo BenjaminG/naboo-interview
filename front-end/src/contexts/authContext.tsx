@@ -51,9 +51,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [logout] = useMutation<LogoutMutation, LogoutMutationVariables>(Logout);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
 
-    if (!user && token) {
+    if (!user && isLoggedIn === "true") {
       getUser()
         .then((res) => setUser(res.data?.getMe || null))
         .finally(() => setIsLoading(false));
@@ -65,9 +65,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const handleSignin = async (input: SignInInput) => {
     try {
       setIsLoading(true);
-      const response = await signin({ variables: { signInInput: input } });
-      const token = response.data?.login?.access_token || "";
-      localStorage.setItem("token", token);
+      await signin({ variables: { signInInput: input } });
+      // Store only a flag, not the JWT token - JWT is now in httpOnly cookie
+      localStorage.setItem("isLoggedIn", "true");
       await getUser().then((res) => setUser(res.data?.getMe || null));
       router.push("/profil");
     } catch (err) {
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       await logout();
-      localStorage.removeItem("token");
+      localStorage.removeItem("isLoggedIn");
       setUser(null);
       router.push("/");
     } catch (err) {
