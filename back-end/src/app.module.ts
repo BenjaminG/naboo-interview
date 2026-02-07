@@ -1,4 +1,4 @@
-import { Module, UnauthorizedException } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ActivityModule } from './activity/activity.module';
@@ -23,6 +23,30 @@ export function getPlaygroundConfig(): boolean {
   return process.env.NODE_ENV !== 'production';
 }
 
+/**
+ * Verifies a JWT token and returns the payload or null.
+ * Returns null instead of throwing for invalid/expired tokens,
+ * allowing public queries to proceed while protected routes
+ * use AuthGuard to enforce authentication.
+ */
+export async function verifyJwtToken(
+  jwtService: JwtService,
+  token: string | undefined,
+  secret: string,
+): Promise<PayloadDto | null> {
+  if (!token) {
+    return null;
+  }
+
+  try {
+    return (await jwtService.verifyAsync(token, { secret })) as PayloadDto;
+  } catch {
+    // Invalid or expired token - return null to allow public queries
+    // Protected routes use AuthGuard which checks for jwtPayload
+    return null;
+  }
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -44,16 +68,11 @@ export function getPlaygroundConfig(): boolean {
             const token =
               req.headers.jwt ?? (req.cookies && req.cookies['jwt']);
 
-            let jwtPayload: PayloadDto | null = null;
-            if (token) {
-              try {
-                jwtPayload = (await jwtService.verifyAsync(token, {
-                  secret,
-                })) as PayloadDto;
-              } catch (error) {
-                throw new UnauthorizedException(error);
-              }
-            }
+            const jwtPayload = await verifyJwtToken(
+              jwtService,
+              token as string | undefined,
+              secret ?? '',
+            );
 
             return {
               jwtPayload,
