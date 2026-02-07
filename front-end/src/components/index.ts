@@ -5,4 +5,5 @@ export * from "./EmptyData";
 export * from "./Filters";
 export * from "./Form";
 export * from "./PageTitle";
+export * from "./ServiceErrorAlert";
 export * from "./Topbar";

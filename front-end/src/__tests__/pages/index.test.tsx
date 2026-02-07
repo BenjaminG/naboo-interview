@@ -16,9 +16,6 @@ vi.mock('@/graphql/apollo', () => ({
 
 // Mock Mantine components
 vi.mock('@mantine/core', () => ({
-  Alert: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="error-alert">{children}</div>
-  ),
   Button: ({ children }: { children: React.ReactNode }) => (
     <button>{children}</button>
   ),
@@ -33,6 +30,12 @@ vi.mock('@/components', () => ({
     <div data-testid="activity">{activity.id}</div>
   ),
   PageTitle: ({ title }: { title: string }) => <h1>{title}</h1>,
+  ServiceErrorAlert: ({ show }: { show?: boolean }) =>
+    show ? (
+      <div data-testid="error-alert">
+        Le service est temporairement indisponible. Veuillez réessayer plus tard.
+      </div>
+    ) : null,
 }));
 
 // Mock hooks

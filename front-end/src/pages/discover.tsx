@@ -1,4 +1,4 @@
-import { Activity, EmptyData, PageTitle } from "@/components";
+import { Activity, EmptyData, PageTitle, ServiceErrorAlert } from "@/components";
 import { createSSRClient } from "@/graphql/apollo";
 import {
   GetActivitiesQuery,
@@ -6,7 +6,7 @@ import {
 } from "@/graphql/generated/types";
 import GetActivities from "@/graphql/queries/activity/getActivities";
 import { useAuth } from "@/hooks";
-import { Alert, Button, Grid, Group } from "@mantine/core";
+import { Button, Grid, Group } from "@mantine/core";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
@@ -28,7 +28,8 @@ export const getServerSideProps: GetServerSideProps<DiscoverProps> = async ({
       query: GetActivities,
     });
     return { props: { activities: response.data.getActivities } };
-  } catch {
+  } catch (error) {
+    console.error("[SSR] Failed to fetch activities:", error);
     return { props: { activities: [], error: true } };
   }
 };
@@ -41,12 +42,7 @@ export default function Discover({ activities, error }: DiscoverProps) {
       <Head>
         <title>Discover | CDTR</title>
       </Head>
-      {error && (
-        <Alert color="red" mb="md">
-          Le service est temporairement indisponible. Veuillez réessayer plus
-          tard.
-        </Alert>
-      )}
+      <ServiceErrorAlert show={error} />
       <Group position="apart">
         <PageTitle title="Découvrez des activités" />
         {user && (

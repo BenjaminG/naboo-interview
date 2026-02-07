@@ -1,4 +1,4 @@
-import { ActivityListItem, EmptyData, Filters, PageTitle } from "@/components";
+import { ActivityListItem, EmptyData, Filters, PageTitle, ServiceErrorAlert } from "@/components";
 import { createSSRClient } from "@/graphql/apollo";
 import {
   GetActivitiesByCityQuery,
@@ -6,7 +6,7 @@ import {
 } from "@/graphql/generated/types";
 import GetActivitiesByCity from "@/graphql/queries/activity/getActivitiesByCity";
 import { useDebounced } from "@/hooks";
-import { Alert, Box, Divider, Flex, Grid, Loader } from "@mantine/core";
+import { Box, Divider, Flex, Grid, Loader } from "@mantine/core";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useSearchParams } from "next/navigation";
@@ -51,7 +51,8 @@ export const getServerSideProps: GetServerSideProps<CityDetailsProps> = async ({
         city: params.city,
       },
     };
-  } catch {
+  } catch (error) {
+    console.error("[SSR] Failed to fetch activities by city:", error);
     return {
       props: { activities: [], city: params.city, error: true },
     };
@@ -113,12 +114,7 @@ export default function ActivityDetails({
         title={`Activités pour la ville de ${city}`}
         prevPath="/explorer"
       />
-      {displayError && (
-        <Alert color="red" mb="md">
-          Le service est temporairement indisponible. Veuillez réessayer plus
-          tard.
-        </Alert>
-      )}
+      <ServiceErrorAlert show={displayError} />
       <Grid>
         <Grid.Col span={4}>
           <Filters

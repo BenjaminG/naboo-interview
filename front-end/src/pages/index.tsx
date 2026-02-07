@@ -1,7 +1,7 @@
-import { Activity, PageTitle } from "@/components";
+import { Activity, PageTitle, ServiceErrorAlert } from "@/components";
 import { createSSRClient } from "@/graphql/apollo";
 import { useGlobalStyles } from "@/utils";
-import { Alert, Button, Flex, Grid, Text } from "@mantine/core";
+import { Button, Flex, Grid, Text } from "@mantine/core";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
@@ -29,7 +29,8 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async ({
     });
 
     return { props: { activities: response.data.getLatestActivities } };
-  } catch {
+  } catch (error) {
+    console.error("[SSR] Failed to fetch latest activities:", error);
     return { props: { activities: [], error: true } };
   }
 };
@@ -47,12 +48,7 @@ export default function Home({ activities, error }: HomeProps) {
       </Head>
       <main>
         <PageTitle title="Accueil" />
-        {error && (
-          <Alert color="red" mb="md">
-            Le service est temporairement indisponible. Veuillez réessayer plus
-            tard.
-          </Alert>
-        )}
+        <ServiceErrorAlert show={error} />
         <Text>
           Sed ut perspiciatis unde omnis iste natus error sit voluptatem
           accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae

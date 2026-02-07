@@ -3,7 +3,7 @@ import { searchCity } from "@/services";
 import { Box, Button, Group, Select, TextInput, Textarea } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   cityValidation,
   descriptionValidation,
@@ -25,6 +25,11 @@ type SelectData = {
 
 export default function ActivityForm() {
   const snackbar = useSnackbar();
+  const snackbarRef = useRef(snackbar);
+  useEffect(() => {
+    snackbarRef.current = snackbar;
+  });
+
   const [searchValue, setSearchValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const debouncedSearch = useDebounced(searchValue, 300);
@@ -60,10 +65,10 @@ export default function ActivityForm() {
           setDisplayedCities(data.map((d) => ({ value: d.nom, label: d.nom })));
         })
         .catch((err) => {
-          snackbar.error(err?.message || "Une erreur est survenue");
+          snackbarRef.current.error(err?.message || "Une erreur est survenue");
         });
     }
-  }, [debouncedSearch, searchValue, snackbar]);
+  }, [debouncedSearch]);
 
   const handleSubmit = async (values: CreateActivityInput) => {
     try {
