@@ -15,20 +15,10 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
 import { PayloadDto } from './auth/types/jwtPayload.dto';
 
-/**
- * Returns whether GraphQL Playground should be enabled.
- * Disabled in production for security, enabled in development.
- */
 export function getPlaygroundConfig(): boolean {
   return process.env.NODE_ENV !== 'production';
 }
 
-/**
- * Verifies a JWT token and returns the payload or null.
- * Returns null instead of throwing for invalid/expired tokens,
- * allowing public queries to proceed while protected routes
- * use AuthGuard to enforce authentication.
- */
 export async function verifyJwtToken(
   jwtService: JwtService,
   token: string | undefined,
@@ -41,8 +31,6 @@ export async function verifyJwtToken(
   try {
     return (await jwtService.verifyAsync(token, { secret })) as PayloadDto;
   } catch {
-    // Invalid or expired token - return null to allow public queries
-    // Protected routes use AuthGuard which checks for jwtPayload
     return null;
   }
 }

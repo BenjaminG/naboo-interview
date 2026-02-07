@@ -1,4 +1,5 @@
-import { ErrorBoundary, Topbar } from "@/components";
+import { Topbar } from "@/components";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, SnackbarProvider } from "@/contexts";
 import { routes } from "@/routes";
 import { graphqlClient } from "@/graphql/apollo";
