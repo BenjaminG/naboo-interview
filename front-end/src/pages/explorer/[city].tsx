@@ -6,11 +6,11 @@ import {
 } from "@/graphql/generated/types";
 import GetActivitiesByCity from "@/graphql/queries/activity/getActivitiesByCity";
 import { useDebounced } from "@/hooks";
-import { Alert, Divider, Flex, Grid } from "@mantine/core";
+import { Alert, Box, Divider, Flex, Grid, Loader } from "@mantine/core";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/router";
+import { useQuery } from "@apollo/client";
 import { Fragment, useEffect, useState } from "react";
 
 interface CityDetailsProps {
@@ -63,7 +63,6 @@ export default function ActivityDetails({
   city,
   error,
 }: CityDetailsProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [searchActivity, setSearchActivity] = useState<string | undefined>(
@@ -76,20 +75,34 @@ export default function ActivityDetails({
   );
   const debouncedSearchPrice = useDebounced(searchPrice, 300);
 
+  const [hasFilterChanged, setHasFilterChanged] = useState(false);
+
   useEffect(() => {
-    const searchParams = new URLSearchParams();
+    setHasFilterChanged(true);
+  }, [debouncedSearchActivity, debouncedSearchPrice]);
 
-    if (debouncedSearchActivity !== undefined)
-      searchParams.set("activity", debouncedSearchActivity);
+  const {
+    data: clientData,
+    loading: clientLoading,
+    error: clientError,
+  } = useQuery<GetActivitiesByCityQuery, GetActivitiesByCityQueryVariables>(
+    GetActivitiesByCity,
+    {
+      skip: !hasFilterChanged,
+      variables: {
+        city,
+        activity: debouncedSearchActivity || null,
+        price: debouncedSearchPrice ?? null,
+      },
+    }
+  );
 
-    if (debouncedSearchPrice !== undefined)
-      searchParams.set("price", debouncedSearchPrice.toString());
+  const displayActivities =
+    hasFilterChanged && clientData
+      ? clientData.getActivitiesByCity
+      : activities;
 
-    const stringParams = searchParams.toString();
-    router.push(`/explorer/${city}${stringParams ? `?${stringParams}` : ""}`);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [city, debouncedSearchActivity, debouncedSearchPrice]);
+  const displayError = error || !!clientError;
 
   return (
     <>
@@ -100,7 +113,7 @@ export default function ActivityDetails({
         title={`Activités pour la ville de ${city}`}
         prevPath="/explorer"
       />
-      {error && (
+      {displayError && (
         <Alert color="red" mb="md">
           Le service est temporairement indisponible. Veuillez réessayer plus
           tard.
@@ -118,18 +131,26 @@ export default function ActivityDetails({
           />
         </Grid.Col>
         <Grid.Col span={8}>
-          <Flex direction="column" gap="lg">
-            {activities.length > 0 ? (
-              activities.map((activity, idx) => (
-                <Fragment key={activity.id}>
-                  <ActivityListItem activity={activity} />
-                  {idx < activities.length - 1 && <Divider my="sm" />}
-                </Fragment>
-              ))
-            ) : (
-              <EmptyData />
-            )}
-          </Flex>
+          {clientLoading ? (
+            <Box sx={{ textAlign: "center", marginTop: "2rem" }}>
+              <Loader />
+            </Box>
+          ) : (
+            <Flex direction="column" gap="lg">
+              {displayActivities.length > 0 ? (
+                displayActivities.map((activity, idx) => (
+                  <Fragment key={activity.id}>
+                    <ActivityListItem activity={activity} />
+                    {idx < displayActivities.length - 1 && (
+                      <Divider my="sm" />
+                    )}
+                  </Fragment>
+                ))
+              ) : (
+                <EmptyData />
+              )}
+            </Flex>
+          )}
         </Grid.Col>
       </Grid>
     </>

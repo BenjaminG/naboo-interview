@@ -39,7 +39,6 @@ export class Activity extends Document {
 
 export const ActivitySchema = SchemaFactory.createForClass(Activity);
 
-// Add database indexes for performant queries
 ActivitySchema.index({ city: 1 });
 ActivitySchema.index({ owner: 1 });
 ActivitySchema.index({ createdAt: -1 });
