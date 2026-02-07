@@ -1,5 +1,4 @@
 import { Activity, EmptyData, PageTitle } from "@/components";
-import { createSSRClient } from "@/graphql/apollo";
 import {
   GetUserActivitiesQuery,
   GetUserActivitiesQueryVariables,
@@ -7,35 +6,19 @@ import {
 import GetUserActivities from "@/graphql/queries/activity/getUserActivities";
 import { withAuth } from "@/hocs";
 import { useAuth } from "@/hooks";
-import { Alert, Button, Grid, Group } from "@mantine/core";
-import { GetServerSideProps } from "next";
+import { Alert, Box, Button, Grid, Group, Loader } from "@mantine/core";
+import { useQuery } from "@apollo/client";
 import Head from "next/head";
 import Link from "next/link";
 
-interface MyActivitiesProps {
-  activities: GetUserActivitiesQuery["getActivitiesByUser"];
-  error?: boolean;
-}
-
-export const getServerSideProps: GetServerSideProps<
-  MyActivitiesProps
-> = async ({ req }) => {
-  try {
-    const client = createSSRClient(req.headers.cookie);
-    const response = await client.query<
-      GetUserActivitiesQuery,
-      GetUserActivitiesQueryVariables
-    >({
-      query: GetUserActivities,
-    });
-    return { props: { activities: response.data.getActivitiesByUser } };
-  } catch {
-    return { props: { activities: [], error: true } };
-  }
-};
-
-const MyActivities = ({ activities, error }: MyActivitiesProps) => {
+const MyActivities = () => {
   const { user } = useAuth();
+  const { data, loading, error } = useQuery<
+    GetUserActivitiesQuery,
+    GetUserActivitiesQueryVariables
+  >(GetUserActivities);
+
+  const activities = data?.getActivitiesByUser ?? [];
 
   return (
     <>
@@ -56,15 +39,21 @@ const MyActivities = ({ activities, error }: MyActivitiesProps) => {
           </Link>
         )}
       </Group>
-      <Grid>
-        {activities.length > 0 ? (
-          activities.map((activity) => (
-            <Activity activity={activity} key={activity.id} />
-          ))
-        ) : (
-          <EmptyData />
-        )}
-      </Grid>
+      {loading ? (
+        <Box sx={{ textAlign: "center", marginTop: "2rem" }}>
+          <Loader />
+        </Box>
+      ) : (
+        <Grid>
+          {activities.length > 0 ? (
+            activities.map((activity) => (
+              <Activity activity={activity} key={activity.id} />
+            ))
+          ) : (
+            <EmptyData />
+          )}
+        </Grid>
+      )}
     </>
   );
 };
