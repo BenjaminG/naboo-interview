@@ -6,6 +6,8 @@ export class AppService implements OnApplicationBootstrap {
   constructor(private seedService: SeedService) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    await this.seedService.execute();
+    if (process.env.SEED_ENABLED === 'true') {
+      await this.seedService.execute();
+    }
   }
 }
