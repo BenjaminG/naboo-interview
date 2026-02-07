@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } else {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, getUser]);
 
   const handleSignin = async (input: SignInInput) => {
     try {
