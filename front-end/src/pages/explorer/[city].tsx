@@ -1,12 +1,12 @@
 import { ActivityListItem, EmptyData, Filters, PageTitle } from "@/components";
-import { graphqlClient } from "@/graphql/apollo";
+import { createSSRClient } from "@/graphql/apollo";
 import {
   GetActivitiesByCityQuery,
   GetActivitiesByCityQueryVariables,
 } from "@/graphql/generated/types";
 import GetActivitiesByCity from "@/graphql/queries/activity/getActivitiesByCity";
 import { useDebounced } from "@/hooks";
-import { Divider, Flex, Grid } from "@mantine/core";
+import { Alert, Divider, Flex, Grid } from "@mantine/core";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useSearchParams } from "next/navigation";
@@ -16,11 +16,13 @@ import { Fragment, useEffect, useState } from "react";
 interface CityDetailsProps {
   activities: GetActivitiesByCityQuery["getActivitiesByCity"];
   city: string;
+  error?: boolean;
 }
 
 export const getServerSideProps: GetServerSideProps<CityDetailsProps> = async ({
   params,
   query,
+  req,
 }) => {
   if (!params?.city || Array.isArray(params.city)) return { notFound: true };
 
@@ -30,25 +32,36 @@ export const getServerSideProps: GetServerSideProps<CityDetailsProps> = async ({
   )
     return { notFound: true };
 
-  const response = await graphqlClient.query<
-    GetActivitiesByCityQuery,
-    GetActivitiesByCityQueryVariables
-  >({
-    query: GetActivitiesByCity,
-    variables: {
-      city: params.city,
-      activity: query.activity || null,
-      price: query.price ? Number(query.price) : null,
-    },
-  });
-  return {
-    props: { activities: response.data.getActivitiesByCity, city: params.city },
-  };
+  try {
+    const client = createSSRClient(req.headers.cookie);
+    const response = await client.query<
+      GetActivitiesByCityQuery,
+      GetActivitiesByCityQueryVariables
+    >({
+      query: GetActivitiesByCity,
+      variables: {
+        city: params.city,
+        activity: query.activity || null,
+        price: query.price ? Number(query.price) : null,
+      },
+    });
+    return {
+      props: {
+        activities: response.data.getActivitiesByCity,
+        city: params.city,
+      },
+    };
+  } catch {
+    return {
+      props: { activities: [], city: params.city, error: true },
+    };
+  }
 };
 
 export default function ActivityDetails({
   activities,
   city,
+  error,
 }: CityDetailsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -87,6 +100,12 @@ export default function ActivityDetails({
         title={`Activités pour la ville de ${city}`}
         prevPath="/explorer"
       />
+      {error && (
+        <Alert color="red" mb="md">
+          Le service est temporairement indisponible. Veuillez réessayer plus
+          tard.
+        </Alert>
+      )}
       <Grid>
         <Grid.Col span={4}>
           <Filters

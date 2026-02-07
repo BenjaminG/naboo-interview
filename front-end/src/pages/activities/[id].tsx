@@ -1,5 +1,5 @@
 import { PageTitle } from "@/components";
-import { graphqlClient } from "@/graphql/apollo";
+import { createSSRClient } from "@/graphql/apollo";
 import {
   GetActivityQuery,
   GetActivityQueryVariables,
@@ -18,15 +18,20 @@ export const getServerSideProps: GetServerSideProps<
   ActivityDetailsProps
 > = async ({ params, req }) => {
   if (!params?.id || Array.isArray(params.id)) return { notFound: true };
-  const response = await graphqlClient.query<
-    GetActivityQuery,
-    GetActivityQueryVariables
-  >({
-    query: GetActivity,
-    variables: { id: params.id },
-    context: { headers: { Cookie: req.headers.cookie } },
-  });
-  return { props: { activity: response.data.getActivity } };
+
+  try {
+    const client = createSSRClient(req.headers.cookie);
+    const response = await client.query<
+      GetActivityQuery,
+      GetActivityQueryVariables
+    >({
+      query: GetActivity,
+      variables: { id: params.id },
+    });
+    return { props: { activity: response.data.getActivity } };
+  } catch {
+    return { notFound: true };
+  }
 };
 
 export default function ActivityDetails({ activity }: ActivityDetailsProps) {

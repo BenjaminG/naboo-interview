@@ -1,5 +1,5 @@
 import { Activity, EmptyData, PageTitle } from "@/components";
-import { graphqlClient } from "@/graphql/apollo";
+import { createSSRClient } from "@/graphql/apollo";
 import {
   GetUserActivitiesQuery,
   GetUserActivitiesQueryVariables,
@@ -7,29 +7,34 @@ import {
 import GetUserActivities from "@/graphql/queries/activity/getUserActivities";
 import { withAuth } from "@/hocs";
 import { useAuth } from "@/hooks";
-import { Button, Grid, Group } from "@mantine/core";
+import { Alert, Button, Grid, Group } from "@mantine/core";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
 
 interface MyActivitiesProps {
   activities: GetUserActivitiesQuery["getActivitiesByUser"];
+  error?: boolean;
 }
 
 export const getServerSideProps: GetServerSideProps<
   MyActivitiesProps
 > = async ({ req }) => {
-  const response = await graphqlClient.query<
-    GetUserActivitiesQuery,
-    GetUserActivitiesQueryVariables
-  >({
-    query: GetUserActivities,
-    context: { headers: { Cookie: req.headers.cookie } },
-  });
-  return { props: { activities: response.data.getActivitiesByUser } };
+  try {
+    const client = createSSRClient(req.headers.cookie);
+    const response = await client.query<
+      GetUserActivitiesQuery,
+      GetUserActivitiesQueryVariables
+    >({
+      query: GetUserActivities,
+    });
+    return { props: { activities: response.data.getActivitiesByUser } };
+  } catch {
+    return { props: { activities: [], error: true } };
+  }
 };
 
-const MyActivities = ({ activities }: MyActivitiesProps) => {
+const MyActivities = ({ activities, error }: MyActivitiesProps) => {
   const { user } = useAuth();
 
   return (
@@ -37,6 +42,12 @@ const MyActivities = ({ activities }: MyActivitiesProps) => {
       <Head>
         <title>Mes activités | CDTR</title>
       </Head>
+      {error && (
+        <Alert color="red" mb="md">
+          Le service est temporairement indisponible. Veuillez réessayer plus
+          tard.
+        </Alert>
+      )}
       <Group position="apart">
         <PageTitle title="Mes activités" />
         {user && (
