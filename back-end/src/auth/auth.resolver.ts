@@ -3,6 +3,14 @@ import { SignInDto, SignInInput, SignUpInput } from './types';
 import { AuthService } from './auth.service';
 import { User } from 'src/user/user.schema';
 
+const getCookieOptions = () => ({
+  httpOnly: true,
+  sameSite: 'strict' as const,
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  domain: process.env.FRONTEND_DOMAIN,
+});
+
 @Resolver('Auth')
 export class AuthResolver {
   constructor(private authService: AuthService) {}
@@ -13,10 +21,7 @@ export class AuthResolver {
     @Context() ctx: any,
   ): Promise<SignInDto> {
     const data = await this.authService.signIn(loginUserDto);
-    ctx.res.cookie('jwt', data.access_token, {
-      httpOnly: true,
-      domain: process.env.FRONTEND_DOMAIN,
-    });
+    ctx.res.cookie('jwt', data.access_token, getCookieOptions());
 
     return data;
   }
@@ -30,10 +35,7 @@ export class AuthResolver {
 
   @Mutation(() => Boolean)
   async logout(@Context() ctx: any): Promise<boolean> {
-    ctx.res.clearCookie('jwt', {
-      httpOnly: true,
-      domain: process.env.FRONTEND_DOMAIN,
-    });
+    ctx.res.clearCookie('jwt', getCookieOptions());
     return true;
   }
 }
