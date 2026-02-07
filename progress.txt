@@ -1,0 +1,156 @@
+## 2026-02-07 - US-008: Fix Invalid JWT Blocking Public Queries
+
+**Completed:**
+- Extracted JWT verification into testable `verifyJwtToken()` helper function
+- Changed error handling from throwing `UnauthorizedException` to returning `null`
+- Public queries now work even when users have expired/invalid JWT cookies
+- AuthGuard continues to protect mutations by checking for `jwtPayload === null`
+
+**Files Changed:**
+- `back-end/src/app.module.ts` (modified) - Added `verifyJwtToken` helper, refactored context builder
+- `back-end/src/app.module.spec.ts` (modified) - Added 5 tests for JWT verification scenarios
+
+**Tests Added:**
+- `should return null when no JWT token is provided`
+- `should return valid payload when JWT token is valid`
+- `should return null when JWT token is expired`
+- `should return null when JWT token is invalid`
+- `should return null when JWT token has invalid signature`
+
+**Learnings:**
+- Simplified test file by importing functions directly rather than dynamic imports with `jest.resetModules()`
+- ConfigService returns `string | undefined`, need to handle with nullish coalescing (`?? ''`)
+
+**Constitution Compliance:**
+- TDD: Wrote failing tests first, then implemented
+- Minimal changes: Only modified the error handling behavior
+- Security: Maintains auth protection via AuthGuard for protected routes
+
+---
+
+## 2026-02-07 - US-012: Add Database Indexes on Activity Collection
+
+**Completed:**
+- Added MongoDB indexes on `city`, `owner`, and `createdAt` fields
+- Indexes improve query performance for common access patterns
+- Created comprehensive test file to verify index existence
+
+**Files Changed:**
+- `back-end/src/activity/activity.schema.ts` (modified) - Added 3 index definitions
+- `back-end/src/activity/activity.schema.spec.ts` (new) - Index verification tests
+
+**Tests Added:**
+- `should have an index on city field`
+- `should have an index on owner field`
+- `should have an index on createdAt field (descending)`
+- `should have the default _id index`
+
+**Learnings:**
+- Used `activityModel.createCollection()` to ensure collection exists before checking indexes
+- `activityModel.ensureIndexes()` creates indexes defined on schema
+- Index verification uses `model.collection.indexes()` to list all indexes
+
+**Constitution Compliance:**
+- TDD: Wrote failing tests first, then implemented indexes
+- Minimal changes: Only added index definitions, no logic changes
+- Performance: Indexes on frequently queried fields (city, owner, createdAt)
+
+---
+
+## 2026-02-07 - US-013: Use Environment Variables for Frontend API URLs
+
+**Completed:**
+- Added `NEXT_PUBLIC_API_URL` env var support to axios.ts with localhost fallback
+- Created `.env.example` documenting both `NEXT_PUBLIC_GRAPHQL_URL` and `NEXT_PUBLIC_API_URL`
+- Added comprehensive unit tests for env var and fallback behavior
+
+**Files Changed:**
+- `front-end/src/services/axios.ts` (modified) - Use env var with fallback
+- `front-end/.env.example` (new) - Document all frontend env vars
+- `front-end/src/services/__tests__/axios.test.ts` (new) - Env var tests
+
+**Tests Added:**
+- `uses NEXT_PUBLIC_API_URL when set`
+- `falls back to localhost when env var is not set`
+- `has withCredentials enabled`
+- `has Content-Type header set to application/json`
+
+**Learnings:**
+- Followed same testing pattern as apollo.test.ts using `vi.resetModules()` and dynamic imports
+- Nullish coalescing (`??`) is cleaner than ternary for env var fallbacks
+
+**Constitution Compliance:**
+- TDD: Wrote failing tests first, then implemented
+- Minimal changes: Only touched axios.ts and created .env.example
+- DX: Environment variables enable deployment to any environment without code changes
+
+---
+
+## 2026-02-07 - US-010: Fix Apollo SSR Cache Pollution
+
+**Completed:**
+- Refactored Apollo client to factory pattern for SSR cache isolation
+- Added `createSSRClient(cookie?)` factory that creates fresh instances per SSR request
+- Added `getClientSideClient()` singleton for browser usage
+- Added `NEXT_PUBLIC_GRAPHQL_URL` env var support with localhost fallback
+- Maintained backwards-compatible `graphqlClient` export
+- Used proper `ApolloClient<NormalizedCacheObject>` types throughout
+
+**Files Changed:**
+- `front-end/src/graphql/apollo.ts` (modified) - Full refactor to factory pattern
+- `front-end/src/graphql/__tests__/apollo.test.ts` (new) - 8 comprehensive tests
+
+**Tests Added:**
+- `createSSRClient returns a new instance on each call`
+- `createSSRClient passes cookie to HttpLink headers when provided`
+- `getClientSideClient returns the same instance on multiple calls`
+- `uses NEXT_PUBLIC_GRAPHQL_URL when set`
+- `falls back to localhost when env var is not set`
+- `exports graphqlClient for backwards compatibility`
+- Type verification tests for NormalizedCacheObject
+
+**Learnings:**
+- Vitest `vi.resetModules()` needed for testing module-level singletons with env vars
+- Dynamic imports (`await import()`) allow fresh module state between tests
+- Apollo's `ssrMode` flag should be explicitly true/false, not window detection
+
+**Constitution Compliance:**
+- TDD: Wrote failing tests first, then implemented
+- Minimal changes: Only touched apollo.ts, no SSR page changes yet
+- Security: Prevents cross-user cache leaks in SSR
+
+---
+
+## 2026-02-07 - US-009: Remove JWT from localStorage
+
+**Completed:**
+- Changed localStorage key from `"token"` to `"isLoggedIn"` boolean flag
+- `handleSignin` now stores `"true"` instead of the JWT token
+- `handleLogout` now removes `"isLoggedIn"` instead of `"token"`
+- Initial `useEffect` checks for `isLoggedIn === "true"` to trigger `getMe` query
+- JWT is no longer stored client-side (relies on httpOnly cookie from backend)
+- Added vitest path alias config for `@/` imports
+
+**Files Changed:**
+- `front-end/src/contexts/authContext.tsx` (modified) - Replace token storage with boolean flag
+- `front-end/src/contexts/__tests__/authContext.test.tsx` (new) - 5 localStorage behavior tests
+- `front-end/vitest.config.ts` (modified) - Added `@/` path alias for imports
+
+**Tests Added:**
+- `stores "isLoggedIn" key (not "token") after sign-in`
+- `stores "true" as the localStorage value (not a JWT)`
+- `removes "isLoggedIn" from localStorage after logout`
+- `calls getMe query when isLoggedIn flag is present on page load`
+- `does NOT call getMe query when isLoggedIn flag is absent`
+
+**Learnings:**
+- MockedProvider needs factory functions to create fresh mocks for each test
+- Testing React context requires test components that consume the context
+- Apollo mocks must match exact query variables or they won't be matched
+
+**Constitution Compliance:**
+- TDD: Wrote 5 failing tests first, then implemented to make them pass
+- Minimal changes: Only modified authContext.tsx and added test infrastructure
+- Security: XSS attacks can no longer steal JWT from localStorage
+
+---
