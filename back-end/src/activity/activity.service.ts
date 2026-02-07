@@ -4,6 +4,14 @@ import { Model } from 'mongoose';
 import { Activity } from './activity.schema';
 import { CreateActivityInput } from './activity.inputs.dto';
 
+/**
+ * Escapes all regex special characters in a string to make it safe for use in MongoDB $regex.
+ * This prevents ReDoS attacks and ensures user input is treated as literal text.
+ */
+export function escapeRegex(input: string): string {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 @Injectable()
 export class ActivityService {
   constructor(
@@ -58,7 +66,9 @@ export class ActivityService {
         $and: [
           { city },
           ...(price ? [{ price }] : []),
-          ...(activity ? [{ name: { $regex: activity, $options: 'i' } }] : []),
+          ...(activity
+            ? [{ name: { $regex: escapeRegex(activity), $options: 'i' } }]
+            : []),
         ],
       })
       .exec();
