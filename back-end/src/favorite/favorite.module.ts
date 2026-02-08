@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Favorite, FavoriteSchema } from './favorite.schema';
 import { FavoriteService } from './favorite.service';
@@ -10,7 +10,7 @@ import { ActivityModule } from '../activity/activity.module';
     MongooseModule.forFeature([
       { name: Favorite.name, schema: FavoriteSchema },
     ]),
-    forwardRef(() => ActivityModule),
+    ActivityModule,
   ],
   providers: [FavoriteService, FavoriteResolver],
   exports: [FavoriteService],

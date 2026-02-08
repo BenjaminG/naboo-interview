@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  forwardRef,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Favorite } from './favorite.schema';
@@ -14,7 +9,6 @@ export class FavoriteService {
   constructor(
     @InjectModel(Favorite.name)
     private favoriteModel: Model<Favorite>,
-    @Inject(forwardRef(() => ActivityService))
     private activityService: ActivityService,
   ) {}
 
