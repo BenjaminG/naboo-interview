@@ -183,7 +183,7 @@ export type ReorderFavoritesMutationVariables = Exact<{
 }>;
 
 
-export type ReorderFavoritesMutation = { __typename?: 'Mutation', reorderFavorites: Array<{ __typename?: 'Favorite', id: string, order: number, createdAt: any, activity: { __typename?: 'Activity', id: string, name: string, description: string, city: string, price: number } }> };
+export type ReorderFavoritesMutation = { __typename?: 'Mutation', reorderFavorites: Array<{ __typename?: 'Favorite', id: string, order: number, createdAt: any, activity: { __typename?: 'Activity', id: string, city: string, description: string, name: string, price: number, owner: { __typename?: 'User', firstName: string, lastName: string } } }> };
 
 export type ToggleFavoriteMutationVariables = Exact<{
   activityId: Scalars['ID']['input'];

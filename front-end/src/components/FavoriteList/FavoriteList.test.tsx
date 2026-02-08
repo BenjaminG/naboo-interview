@@ -83,6 +83,7 @@ const mockFavorites = [
       description: 'Description one',
       city: 'Paris',
       price: 50,
+      owner: { __typename: 'User', firstName: 'Test', lastName: 'Owner' },
     },
   },
   {
@@ -97,6 +98,7 @@ const mockFavorites = [
       description: 'Description two',
       city: 'Lyon',
       price: 75,
+      owner: { __typename: 'User', firstName: 'Test', lastName: 'Owner' },
     },
   },
   {
@@ -111,6 +113,7 @@ const mockFavorites = [
       description: 'Description three',
       city: 'Marseille',
       price: 100,
+      owner: { __typename: 'User', firstName: 'Test', lastName: 'Owner' },
     },
   },
 ];

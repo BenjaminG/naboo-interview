@@ -39,10 +39,8 @@ export function MenuItem({ route, label, icon }: Route) {
       </Menu.Target>
       <Menu.Dropdown>
         {route.map((item) => (
-          <Menu.Item key={item.link}>
-            <Link href={item.link} className={classes.menuItemLink}>
-              {item.label}
-            </Link>
+          <Menu.Item key={item.link} component={Link} href={item.link} className={classes.menuItemLink}>
+            {item.label}
           </Menu.Item>
         ))}
       </Menu.Dropdown>

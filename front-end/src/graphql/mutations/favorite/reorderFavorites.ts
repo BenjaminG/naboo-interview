@@ -1,4 +1,5 @@
 import gql from 'graphql-tag';
+import ActivityFragment from '@/graphql/fragments/activity';
 
 const ReorderFavorites = gql`
   mutation ReorderFavorites($activityIds: [String!]!) {
@@ -7,14 +8,11 @@ const ReorderFavorites = gql`
       order
       createdAt
       activity {
-        id
-        name
-        description
-        city
-        price
+        ...Activity
       }
     }
   }
+  ${ActivityFragment}
 `;
 
 export default ReorderFavorites;
