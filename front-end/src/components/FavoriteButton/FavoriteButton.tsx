@@ -40,6 +40,7 @@ export function FavoriteButton({ activityId }: FavoriteButtonProps) {
     { toggleFavorite: boolean },
     { activityId: string }
   >(ToggleFavorite, {
+    refetchQueries: ['GetMyFavorites'],
     update(cache, { data }) {
       if (!data) return;
 

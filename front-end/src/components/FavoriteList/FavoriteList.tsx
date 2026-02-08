@@ -106,7 +106,9 @@ function SortableItem({ favorite }: SortableItemProps) {
 
 export function FavoriteList() {
   const { error: showError } = useSnackbar();
-  const { data, loading } = useQuery<GetMyFavoritesQuery>(GetMyFavorites);
+  const { data, loading } = useQuery<GetMyFavoritesQuery>(GetMyFavorites, {
+    fetchPolicy: 'cache-and-network',
+  });
   const [localFavorites, setLocalFavorites] = useState<FavoriteItem[] | null>(
     null
   );

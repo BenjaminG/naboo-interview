@@ -249,6 +249,70 @@ test.describe('Favorites Feature', () => {
     })
   })
 
+  test.describe('Cache Sync', () => {
+    test('should sync favorites when navigating via SPA between discover and profile', async ({
+      page,
+    }) => {
+      await login(page)
+      await clearUserFavorites(page)
+
+      // Visit "Mes favoris" tab to prime Apollo cache with empty state
+      await page.goto('/profil')
+      await page.getByRole('tab', { name: 'Mes favoris' }).click()
+      await expect(
+        page.getByText("Vous n'avez pas encore de favoris")
+      ).toBeVisible()
+
+      // SPA navigate to discover page via nav link (no full reload)
+      await page.getByRole('link', { name: 'Découvrez des activités' }).click()
+      await page.waitForURL('/discover')
+      await page.waitForLoadState('networkidle')
+
+      // Favorite 2 activities
+      const outlinedHearts = page.getByTestId('favorite-button-outlined')
+      await outlinedHearts.first().click()
+      await expect(page.getByText('Ajouté aux favoris')).toBeVisible()
+      await page.waitForTimeout(500)
+
+      await outlinedHearts.first().click()
+      await expect(page.getByText('Ajouté aux favoris')).toBeVisible()
+      await page.waitForTimeout(500)
+
+      // SPA navigate back to profile via user menu
+      const userIcon = page.locator('header').locator('svg.tabler-icon-user-circle').first()
+      await userIcon.hover()
+      await page.getByRole('menuitem').filter({ hasText: 'Profil' }).click()
+      await page.waitForURL('/profil')
+
+      // Click "Mes favoris" tab and verify favorites are shown (not stale empty state)
+      await page.getByRole('tab', { name: 'Mes favoris' }).click()
+      const favoriteCards = page.locator('[class*="Card"]').filter({
+        has: page.getByTestId('favorite-button-filled'),
+      })
+      await expect(favoriteCards).toHaveCount(2)
+
+      // SPA navigate to discover again
+      await page.getByRole('link', { name: 'Découvrez des activités' }).click()
+      await page.waitForURL('/discover')
+      await page.waitForLoadState('networkidle')
+
+      // Unfavorite one activity
+      const filledHeart = page.getByTestId('favorite-button-filled').first()
+      await filledHeart.click()
+      await expect(page.getByText('Retiré des favoris')).toBeVisible()
+      await page.waitForTimeout(500)
+
+      // SPA navigate back to profile
+      await userIcon.hover()
+      await page.getByRole('menuitem').filter({ hasText: 'Profil' }).click()
+      await page.waitForURL('/profil')
+
+      // Verify only 1 favorite remains
+      await page.getByRole('tab', { name: 'Mes favoris' }).click()
+      await expect(favoriteCards).toHaveCount(1)
+    })
+  })
+
   test.describe('Unfavorite', () => {
     test('should remove activity from favorites when unfavoriting', async ({
       page,
