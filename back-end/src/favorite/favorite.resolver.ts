@@ -1,12 +1,50 @@
-import { Resolver, Mutation, Args, Context, ID } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  Context,
+  Parent,
+  ResolveField,
+  ID,
+} from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { FavoriteService } from './favorite.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { ContextWithJWTPayload } from '../auth/types/context';
+import { Favorite } from './favorite.schema';
+import { Activity } from '../activity/activity.schema';
 
-@Resolver()
+@Resolver(() => Favorite)
 export class FavoriteResolver {
   constructor(private readonly favoriteService: FavoriteService) {}
+
+  @ResolveField(() => ID)
+  id(@Parent() favorite: Favorite): string {
+    return favorite._id.toString();
+  }
+
+  @ResolveField(() => Activity)
+  async activity(@Parent() favorite: Favorite): Promise<Activity> {
+    await favorite.populate('activity');
+    return favorite.activity;
+  }
+
+  @Query(() => [Favorite])
+  @UseGuards(AuthGuard)
+  async getMyFavorites(
+    @Context() context: ContextWithJWTPayload,
+  ): Promise<Favorite[]> {
+    return this.favoriteService.findByUser(context.jwtPayload.id);
+  }
+
+  @Query(() => [String])
+  @UseGuards(AuthGuard)
+  async getMyFavoritedActivityIds(
+    @Context() context: ContextWithJWTPayload,
+  ): Promise<string[]> {
+    return this.favoriteService.findFavoritedActivityIds(context.jwtPayload.id);
+  }
 
   @Mutation(() => Boolean)
   @UseGuards(AuthGuard)

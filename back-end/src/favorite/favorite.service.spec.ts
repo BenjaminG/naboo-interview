@@ -203,4 +203,80 @@ describe('FavoriteService', () => {
       await expect(createDuplicate()).rejects.toThrow();
     });
   });
+
+  describe('findByUser', () => {
+    it('should return favorites sorted by order ASC', async () => {
+      // Add favorites in reverse order
+      await service.toggle(testUserId, testActivity.id); // order = 0
+      await service.toggle(testUserId, testActivity2.id); // order = 1
+
+      const favorites = await service.findByUser(testUserId);
+
+      expect(favorites).toHaveLength(2);
+      expect(favorites[0].activity.toString()).toBe(testActivity.id);
+      expect(favorites[1].activity.toString()).toBe(testActivity2.id);
+      expect(favorites[0].order).toBe(0);
+      expect(favorites[1].order).toBe(1);
+    });
+
+    it('should return empty array when user has no favorites', async () => {
+      const favorites = await service.findByUser(testUserId);
+
+      expect(favorites).toEqual([]);
+    });
+
+    it('should only return favorites for the specified user', async () => {
+      // User 1 adds two favorites
+      await service.toggle(testUserId, testActivity.id);
+      await service.toggle(testUserId, testActivity2.id);
+
+      // User 2 adds one favorite
+      await service.toggle(testUserId2, testActivity.id);
+
+      const user1Favorites = await service.findByUser(testUserId);
+      const user2Favorites = await service.findByUser(testUserId2);
+
+      expect(user1Favorites).toHaveLength(2);
+      expect(user2Favorites).toHaveLength(1);
+    });
+  });
+
+  describe('findFavoritedActivityIds', () => {
+    it('should return array of activity ID strings', async () => {
+      await service.toggle(testUserId, testActivity.id);
+      await service.toggle(testUserId, testActivity2.id);
+
+      const activityIds = await service.findFavoritedActivityIds(testUserId);
+
+      expect(activityIds).toHaveLength(2);
+      expect(activityIds).toContain(testActivity.id);
+      expect(activityIds).toContain(testActivity2.id);
+      // Verify they are strings, not ObjectIds
+      for (const id of activityIds) {
+        expect(typeof id).toBe('string');
+      }
+    });
+
+    it('should return empty array when user has no favorites', async () => {
+      const activityIds = await service.findFavoritedActivityIds(testUserId);
+
+      expect(activityIds).toEqual([]);
+    });
+
+    it('should only return activity IDs for the specified user', async () => {
+      // User 1 adds two favorites
+      await service.toggle(testUserId, testActivity.id);
+      await service.toggle(testUserId, testActivity2.id);
+
+      // User 2 adds one favorite
+      await service.toggle(testUserId2, testActivity2.id);
+
+      const user1Ids = await service.findFavoritedActivityIds(testUserId);
+      const user2Ids = await service.findFavoritedActivityIds(testUserId2);
+
+      expect(user1Ids).toHaveLength(2);
+      expect(user2Ids).toHaveLength(1);
+      expect(user2Ids).toContain(testActivity2.id);
+    });
+  });
 });

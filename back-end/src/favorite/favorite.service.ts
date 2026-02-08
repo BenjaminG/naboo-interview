@@ -13,6 +13,26 @@ export class FavoriteService {
   ) {}
 
   /**
+   * Find all favorites for a user, sorted by order ASC.
+   */
+  async findByUser(userId: string): Promise<Favorite[]> {
+    return this.favoriteModel.find({ user: userId }).sort({ order: 1 }).exec();
+  }
+
+  /**
+   * Find all favorited activity IDs for a user.
+   * Returns an array of activity ID strings (lightweight, no population).
+   */
+  async findFavoritedActivityIds(userId: string): Promise<string[]> {
+    const favorites = await this.favoriteModel
+      .find({ user: userId })
+      .select('activity')
+      .lean();
+
+    return favorites.map((f) => f.activity.toString());
+  }
+
+  /**
    * Toggle a favorite for a user.
    * If the activity is not favorited, add it and return true.
    * If the activity is already favorited, remove it and return false.
