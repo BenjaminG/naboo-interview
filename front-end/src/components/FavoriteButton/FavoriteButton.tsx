@@ -71,8 +71,11 @@ export function FavoriteButton({ activityId }: FavoriteButtonProps) {
         return;
       }
 
-      const previousState = isFavorited;
-      setIsFavorited(!isFavorited);
+      let previousState = false;
+      setIsFavorited((prev) => {
+        previousState = prev;
+        return !prev;
+      });
 
       try {
         const result = await toggleFavorite({ variables: { activityId } });
@@ -88,7 +91,7 @@ export function FavoriteButton({ activityId }: FavoriteButtonProps) {
         snackbar.error('Une erreur est survenue');
       }
     },
-    [user, router, isFavorited, toggleFavorite, activityId, snackbar]
+    [user, router, toggleFavorite, activityId, snackbar]
   );
 
   return (

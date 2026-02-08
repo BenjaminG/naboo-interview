@@ -1,9 +1,21 @@
 import { PageTitle } from '@/components';
-import { FavoriteList } from '@/components/FavoriteList';
 import { withAuth } from '@/hocs';
 import { useAuth } from '@/hooks';
-import { Avatar, Flex, Tabs, Text } from '@mantine/core';
+import { Avatar, Center, Flex, Loader, Tabs, Text } from '@mantine/core';
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
+
+const FavoriteList = dynamic(
+  () => import('@/components/FavoriteList').then((mod) => mod.FavoriteList),
+  {
+    loading: () => (
+      <Center py="xl">
+        <Loader size="lg" />
+      </Center>
+    ),
+    ssr: false,
+  }
+);
 
 const Profile = () => {
   const { user } = useAuth();
