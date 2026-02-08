@@ -35,8 +35,5 @@ export class Favorite extends Document {
 
 export const FavoriteSchema = SchemaFactory.createForClass(Favorite);
 
-// Unique compound index on (user, activity) to prevent duplicate favorites
 FavoriteSchema.index({ user: 1, activity: 1 }, { unique: true });
-
-// Secondary index on (user, order) for fast ordered retrieval
 FavoriteSchema.index({ user: 1, order: 1 });

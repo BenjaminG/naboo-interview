@@ -152,18 +152,9 @@ describe('FavoriteService', () => {
         service.toggle(testUserId, testActivity.id),
       ]);
 
-      // Both promises should resolve (not reject)
       for (const result of results) {
         expect(result.status).toBe('fulfilled');
       }
-
-      // Final state should be deterministic - either favorited or not
-      const favorite = await favoriteModel.findOne({
-        user: testUserId,
-        activity: testActivity.id,
-      });
-      // The state is valid whether the favorite exists or not
-      expect(favorite === null || favorite !== null).toBe(true);
     });
 
     it('should not affect other users favorites when toggling', async () => {

@@ -16,10 +16,8 @@ export function FavoriteButton({ activityId }: FavoriteButtonProps) {
   const router = useRouter();
   const snackbar = useSnackbar();
 
-  // Local state for optimistic updates
   const [isFavorited, setIsFavorited] = useState(false);
 
-  // Query for current user's favorited activity IDs
   const { data: favoritesData } = useQuery<{
     getMyFavoritedActivityIds: string[];
   }>(GetMyFavoritedActivityIds, {
@@ -27,7 +25,6 @@ export function FavoriteButton({ activityId }: FavoriteButtonProps) {
     fetchPolicy: 'cache-first',
   });
 
-  // Sync local state with server data
   useEffect(() => {
     if (favoritesData?.getMyFavoritedActivityIds) {
       setIsFavorited(
@@ -44,7 +41,6 @@ export function FavoriteButton({ activityId }: FavoriteButtonProps) {
     update(cache, { data }) {
       if (!data) return;
 
-      // Update the cache to keep all FavoriteButton instances in sync
       const existingData = cache.readQuery<{
         getMyFavoritedActivityIds: string[];
       }>({
@@ -75,7 +71,6 @@ export function FavoriteButton({ activityId }: FavoriteButtonProps) {
         return;
       }
 
-      // Optimistic update
       const previousState = isFavorited;
       setIsFavorited(!isFavorited);
 
@@ -89,7 +84,6 @@ export function FavoriteButton({ activityId }: FavoriteButtonProps) {
           snackbar.success('Retiré des favoris');
         }
       } catch {
-        // Rollback on error
         setIsFavorited(previousState);
         snackbar.error('Une erreur est survenue');
       }

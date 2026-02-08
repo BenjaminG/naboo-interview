@@ -143,7 +143,6 @@ export function FavoriteList() {
     const [removed] = reordered.splice(oldIndex, 1);
     reordered.splice(newIndex, 0, removed);
 
-    // Optimistic update
     setLocalFavorites(reordered);
 
     const activityIds = reordered.map((f) => f.activity.id);
@@ -162,7 +161,6 @@ export function FavoriteList() {
         },
       });
     } catch {
-      // Revert on error
       setLocalFavorites(null);
       showError('Impossible de réordonner les favoris');
     }
