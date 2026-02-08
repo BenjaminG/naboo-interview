@@ -36,12 +36,22 @@ export type CreateActivityInput = {
   price: Scalars['Int']['input'];
 };
 
+export type Favorite = {
+  __typename?: 'Favorite';
+  activity: Activity;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  order: Scalars['Int']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   createActivity: Activity;
   login: SignInDto;
   logout: Scalars['Boolean']['output'];
   register: User;
+  reorderFavorites: Array<Favorite>;
+  toggleFavorite: Scalars['Boolean']['output'];
 };
 
 
@@ -59,10 +69,19 @@ export type MutationRegisterArgs = {
   signUpInput: SignUpInput;
 };
 
+export type MutationReorderFavoritesArgs = {
+  activityIds: Array<Scalars['String']['input']>;
+};
+
+
+export type MutationToggleFavoriteArgs = {
+  activityId: Scalars['ID']['input'];
+};
+
 export type PaginatedActivities = {
   __typename?: 'PaginatedActivities';
   items: Array<Activity>;
-  total: Scalars['Int']['output'];
+  total: Scalars['Int']['output']
 };
 
 export type Query = {
@@ -74,6 +93,8 @@ export type Query = {
   getCities: Array<Scalars['String']['output']>;
   getLatestActivities: Array<Activity>;
   getMe: User;
+  getMyFavoritedActivityIds: Array<Scalars['String']['output']>;
+  getMyFavorites: Array<Favorite>;
 };
 
 
@@ -281,6 +302,7 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateActivityInput: CreateActivityInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
+  Favorite: ResolverTypeWrapper<Favorite>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
@@ -299,6 +321,7 @@ export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
   CreateActivityInput: CreateActivityInput;
   DateTime: Scalars['DateTime']['output'];
+  Favorite: Favorite;
   ID: Scalars['ID']['output'];
   Int: Scalars['Int']['output'];
   Mutation: {};
@@ -326,11 +349,21 @@ export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversT
   name: 'DateTime';
 }
 
+export type FavoriteResolvers<ContextType = any, ParentType extends ResolversParentTypes['Favorite'] = ResolversParentTypes['Favorite']> = {
+  activity?: Resolver<ResolversTypes['Activity'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  order?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   createActivity?: Resolver<ResolversTypes['Activity'], ParentType, ContextType, RequireFields<MutationCreateActivityArgs, 'createActivityInput'>>;
   login?: Resolver<ResolversTypes['SignInDto'], ParentType, ContextType, RequireFields<MutationLoginArgs, 'signInInput'>>;
   logout?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   register?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationRegisterArgs, 'signUpInput'>>;
+  reorderFavorites?: Resolver<Array<ResolversTypes['Favorite']>, ParentType, ContextType, RequireFields<MutationReorderFavoritesArgs, 'activityIds'>>;
+  toggleFavorite?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationToggleFavoriteArgs, 'activityId'>>;
 };
 
 export type PaginatedActivitiesResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaginatedActivities'] = ResolversParentTypes['PaginatedActivities']> = {
@@ -347,6 +380,8 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   getCities?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   getLatestActivities?: Resolver<Array<ResolversTypes['Activity']>, ParentType, ContextType>;
   getMe?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  getMyFavoritedActivityIds?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  getMyFavorites?: Resolver<Array<ResolversTypes['Favorite']>, ParentType, ContextType>;
 };
 
 export type SignInDtoResolvers<ContextType = any, ParentType extends ResolversParentTypes['SignInDto'] = ResolversParentTypes['SignInDto']> = {
@@ -365,6 +400,7 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
 export type Resolvers<ContextType = any> = {
   Activity?: ActivityResolvers<ContextType>;
   DateTime?: GraphQLScalarType;
+  Favorite?: FavoriteResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   PaginatedActivities?: PaginatedActivitiesResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
