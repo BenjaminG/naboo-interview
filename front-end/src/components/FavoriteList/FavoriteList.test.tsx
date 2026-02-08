@@ -19,17 +19,25 @@ vi.mock('@/hooks', () => ({
 
 // Mock @dnd-kit/core
 let capturedOnDragEnd: ((event: DragEndEvent) => void) | null = null;
+let capturedOnDragStart: ((event: { active: { id: string } }) => void) | null =
+  null;
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({
     children,
     onDragEnd,
+    onDragStart,
   }: {
     children: React.ReactNode;
     onDragEnd: (event: DragEndEvent) => void;
+    onDragStart: (event: { active: { id: string } }) => void;
   }) => {
     capturedOnDragEnd = onDragEnd;
+    capturedOnDragStart = onDragStart;
     return <div data-testid="dnd-context">{children}</div>;
   },
+  DragOverlay: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="drag-overlay">{children}</div>
+  ),
   closestCenter: vi.fn(),
   KeyboardSensor: vi.fn(),
   PointerSensor: vi.fn(),
@@ -50,13 +58,13 @@ vi.mock('@dnd-kit/sortable', () => ({
     transition: null,
     isDragging: false,
   })),
-  verticalListSortingStrategy: 'verticalListSortingStrategy',
+  rectSortingStrategy: 'rectSortingStrategy',
 }));
 
 // Mock @dnd-kit/utilities
 vi.mock('@dnd-kit/utilities', () => ({
   CSS: {
-    Transform: {
+    Translate: {
       toString: vi.fn(() => ''),
     },
   },
@@ -137,6 +145,7 @@ describe('FavoriteList - Drag and Drop', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedOnDragEnd = null;
+    capturedOnDragStart = null;
     mockedUseAuth.mockReturnValue({
       user: {
         id: 'user-1',

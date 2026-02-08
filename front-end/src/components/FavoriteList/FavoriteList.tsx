@@ -13,17 +13,19 @@ import Link from 'next/link';
 import { useState } from 'react';
 import {
   DndContext,
+  DragOverlay,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
   useSortable,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { IconGripVertical } from '@tabler/icons-react';
@@ -43,6 +45,54 @@ interface SortableItemProps {
   favorite: FavoriteItem;
 }
 
+interface FavoriteCardProps {
+  favorite: FavoriteItem;
+  dragHandleProps?: Record<string, unknown>;
+}
+
+function FavoriteCard({ favorite, dragHandleProps }: FavoriteCardProps) {
+  return (
+    <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Flex justify="space-between" align="flex-start">
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          {...dragHandleProps}
+          data-testid="drag-handle"
+          style={{ cursor: 'grab', marginRight: 8 }}
+        >
+          <IconGripVertical size={18} />
+        </ActionIcon>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Title order={3} size="h5" mb="xs" lineClamp={1}>
+            {favorite.activity.name}
+          </Title>
+          <Text size="sm" color="dimmed" lineClamp={2} mb="sm">
+            {favorite.activity.description}
+          </Text>
+          <Flex gap="xs">
+            <Text size="xs" color="dimmed">
+              {favorite.activity.city}
+            </Text>
+            <Text size="xs" color="dimmed">
+              {favorite.activity.price}€/j
+            </Text>
+          </Flex>
+        </div>
+        <FavoriteButton activityId={favorite.activity.id} />
+      </Flex>
+      <Link
+        href={`/activities/${favorite.activity.id}`}
+        style={{ textDecoration: 'none' }}
+      >
+        <Text color="blue" size="sm" mt="sm">
+          Voir plus
+        </Text>
+      </Link>
+    </Card>
+  );
+}
+
 function SortableItem({ favorite }: SortableItemProps) {
   const {
     attributes,
@@ -54,52 +104,17 @@ function SortableItem({ favorite }: SortableItemProps) {
   } = useSortable({ id: favorite.activity.id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0 : 1,
   };
 
   return (
     <Grid.Col span={6} ref={setNodeRef} style={style}>
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Flex justify="space-between" align="flex-start">
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            {...attributes}
-            {...listeners}
-            data-testid="drag-handle"
-            style={{ cursor: 'grab', marginRight: 8 }}
-          >
-            <IconGripVertical size={18} />
-          </ActionIcon>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Title order={3} size="h5" mb="xs" lineClamp={1}>
-              {favorite.activity.name}
-            </Title>
-            <Text size="sm" color="dimmed" lineClamp={2} mb="sm">
-              {favorite.activity.description}
-            </Text>
-            <Flex gap="xs">
-              <Text size="xs" color="dimmed">
-                {favorite.activity.city}
-              </Text>
-              <Text size="xs" color="dimmed">
-                {favorite.activity.price}€/j
-              </Text>
-            </Flex>
-          </div>
-          <FavoriteButton activityId={favorite.activity.id} />
-        </Flex>
-        <Link
-          href={`/activities/${favorite.activity.id}`}
-          style={{ textDecoration: 'none' }}
-        >
-          <Text color="blue" size="sm" mt="sm">
-            Voir plus
-          </Text>
-        </Link>
-      </Card>
+      <FavoriteCard
+        favorite={favorite}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
     </Grid.Col>
   );
 }
@@ -112,6 +127,7 @@ export function FavoriteList() {
   const [localFavorites, setLocalFavorites] = useState<FavoriteItem[] | null>(
     null
   );
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const [reorderFavorites] = useMutation<
     ReorderFavoritesMutation,
@@ -125,7 +141,12 @@ export function FavoriteList() {
 
   const favorites = localFavorites ?? data?.getMyFavorites ?? [];
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(String(event.active.id));
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveId(null);
     const { active, over } = event;
 
     if (!over || active.id === over.id) {
@@ -193,11 +214,12 @@ export function FavoriteList() {
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <SortableContext
         items={favorites.map((f) => f.activity.id)}
-        strategy={verticalListSortingStrategy}
+        strategy={rectSortingStrategy}
       >
         <Grid>
           {favorites.map((favorite) => (
@@ -205,6 +227,18 @@ export function FavoriteList() {
           ))}
         </Grid>
       </SortableContext>
+      <DragOverlay>
+        {activeId
+          ? (() => {
+              const activeFavorite = favorites.find(
+                (f) => f.activity.id === activeId
+              );
+              return activeFavorite ? (
+                <FavoriteCard favorite={activeFavorite} />
+              ) : null;
+            })()
+          : null}
+      </DragOverlay>
     </DndContext>
   );
 }
