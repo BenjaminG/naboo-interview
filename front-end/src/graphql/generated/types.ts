@@ -178,6 +178,13 @@ export type SignupMutationVariables = Exact<{
 
 export type SignupMutation = { __typename?: 'Mutation', register: { __typename?: 'User', id: string, email: string, firstName: string, lastName: string } };
 
+export type ReorderFavoritesMutationVariables = Exact<{
+  activityIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+
+export type ReorderFavoritesMutation = { __typename?: 'Mutation', reorderFavorites: Array<{ __typename?: 'Favorite', id: string, order: number, createdAt: any, activity: { __typename?: 'Activity', id: string, name: string, description: string, city: string, price: number } }> };
+
 export type ToggleFavoriteMutationVariables = Exact<{
   activityId: Scalars['ID']['input'];
 }>;
