@@ -178,10 +178,18 @@ export type SignupMutationVariables = Exact<{
 
 export type SignupMutation = { __typename?: 'Mutation', register: { __typename?: 'User', id: string, email: string, firstName: string, lastName: string } };
 
+export type ToggleFavoriteMutationVariables = Exact<{
+  activityId: Scalars['ID']['input'];
+}>;
+
+
+export type ToggleFavoriteMutation = { __typename?: 'Mutation', toggleFavorite: boolean };
+
 export type GetActivitiesQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 }>;
+
 
 
 export type GetActivitiesQuery = { __typename?: 'Query', getActivities: { __typename?: 'PaginatedActivities', total: number, items: Array<{ __typename?: 'Activity', id: string, city: string, description: string, name: string, price: number, owner: { __typename?: 'User', firstName: string, lastName: string } }> } };
@@ -226,6 +234,16 @@ export type GetCitiesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetCitiesQuery = { __typename?: 'Query', getCities: Array<string> };
+
+export type GetMyFavoritedActivityIdsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMyFavoritedActivityIdsQuery = { __typename?: 'Query', getMyFavoritedActivityIds: Array<string> };
+
+export type GetMyFavoritesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMyFavoritesQuery = { __typename?: 'Query', getMyFavorites: Array<{ __typename?: 'Favorite', id: string, order: number, createdAt: any, activity: { __typename?: 'Activity', id: string, city: string, description: string, name: string, price: number, owner: { __typename?: 'User', firstName: string, lastName: string } } }> };
 
 
 
