@@ -16,8 +16,7 @@ async function login(page: Page) {
 }
 
 async function clearUserFavorites(page: Page) {
-  await page.goto('/profil')
-  await page.getByRole('tab', { name: 'Mes favoris' }).click()
+  await page.goto('/favoris')
 
   await page.waitForLoadState('networkidle')
   await page.waitForTimeout(500)
@@ -117,8 +116,8 @@ test.describe('Favorites Feature', () => {
     })
   })
 
-  test.describe('Profile Favorites Tab', () => {
-    test('should display favorited activities in profile tab', async ({
+  test.describe('Favorites Page', () => {
+    test('should display favorited activities on favorites page', async ({
       page,
     }) => {
       await login(page)
@@ -134,8 +133,7 @@ test.describe('Favorites Feature', () => {
       await outlinedHearts.first().click()
       await expect(page.getByText('Ajouté aux favoris')).toBeVisible()
 
-      await page.goto('/profil')
-      await page.getByRole('tab', { name: 'Mes favoris' }).click()
+      await page.goto('/favoris')
 
       const favoriteCards = page.locator('[class*="Card"]').filter({
         has: page.getByTestId('favorite-button-filled'),
@@ -163,14 +161,13 @@ test.describe('Favorites Feature', () => {
         await page.waitForTimeout(500)
       }
 
-      await page.goto('/profil')
-      await page.getByRole('tab', { name: 'Mes favoris' }).click()
-
-      const titlesBefore = await page.locator('h3').allTextContents()
-      expect(titlesBefore.length).toBe(3)
+      await page.goto('/favoris')
 
       const dragHandles = page.getByTestId('drag-handle')
       await expect(dragHandles).toHaveCount(3)
+
+      const titlesBefore = await page.locator('h3').allTextContents()
+      expect(titlesBefore.length).toBe(3)
 
       const firstHandle = dragHandles.first()
       const thirdHandle = dragHandles.nth(2)
@@ -195,7 +192,7 @@ test.describe('Favorites Feature', () => {
       await page.waitForTimeout(1000)
 
       await page.reload()
-      await page.getByRole('tab', { name: 'Mes favoris' }).click()
+      await expect(dragHandles).toHaveCount(3)
 
       const titlesAfter = await page.locator('h3').allTextContents()
 
@@ -211,8 +208,7 @@ test.describe('Favorites Feature', () => {
       await login(page)
       await clearUserFavorites(page)
 
-      await page.goto('/profil')
-      await page.getByRole('tab', { name: 'Mes favoris' }).click()
+      await page.goto('/favoris')
       await expect(
         page.getByText("Vous n'avez pas encore de favoris")
       ).toBeVisible()
@@ -232,10 +228,9 @@ test.describe('Favorites Feature', () => {
 
       const userIcon = page.locator('header').locator('svg.tabler-icon-user-circle').first()
       await userIcon.hover()
-      await page.getByRole('menuitem').filter({ hasText: 'Profil' }).click()
-      await page.waitForURL('/profil')
+      await page.getByRole('menuitem').filter({ hasText: 'Mes favoris' }).click()
+      await page.waitForURL('/favoris')
 
-      await page.getByRole('tab', { name: 'Mes favoris' }).click()
       const favoriteCards = page.locator('[class*="Card"]').filter({
         has: page.getByTestId('favorite-button-filled'),
       })
@@ -251,10 +246,9 @@ test.describe('Favorites Feature', () => {
       await page.waitForTimeout(500)
 
       await userIcon.hover()
-      await page.getByRole('menuitem').filter({ hasText: 'Profil' }).click()
-      await page.waitForURL('/profil')
+      await page.getByRole('menuitem').filter({ hasText: 'Mes favoris' }).click()
+      await page.waitForURL('/favoris')
 
-      await page.getByRole('tab', { name: 'Mes favoris' }).click()
       await expect(favoriteCards).toHaveCount(1)
     })
   })
@@ -280,8 +274,7 @@ test.describe('Favorites Feature', () => {
         page.getByTestId('favorite-button-outlined').first()
       ).toBeVisible()
 
-      await page.goto('/profil')
-      await page.getByRole('tab', { name: 'Mes favoris' }).click()
+      await page.goto('/favoris')
 
       await expect(
         page.getByText("Vous n'avez pas encore de favoris")
