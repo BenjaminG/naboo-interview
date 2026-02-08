@@ -279,4 +279,131 @@ describe('FavoriteService', () => {
       expect(user2Ids).toContain(testActivity2.id);
     });
   });
+
+  describe('reorder', () => {
+    let testActivity3: Activity;
+
+    beforeEach(async () => {
+      testActivity3 = await activityModel.create({
+        name: 'Test Activity 3',
+        city: 'Berlin',
+        price: 75,
+        description: 'Test description 3',
+        owner: new Types.ObjectId(),
+      });
+    });
+
+    it('should update order based on array index', async () => {
+      // Add favorites in order: activity1, activity2, activity3
+      await service.toggle(testUserId, testActivity.id); // order = 0
+      await service.toggle(testUserId, testActivity2.id); // order = 1
+      await service.toggle(testUserId, testActivity3.id); // order = 2
+
+      // Reorder to: activity3, activity1, activity2
+      const newOrder = [testActivity3.id, testActivity.id, testActivity2.id];
+      const result = await service.reorder(testUserId, newOrder);
+
+      expect(result).toHaveLength(3);
+      expect(result[0].activity.toString()).toBe(testActivity3.id);
+      expect(result[0].order).toBe(0);
+      expect(result[1].activity.toString()).toBe(testActivity.id);
+      expect(result[1].order).toBe(1);
+      expect(result[2].activity.toString()).toBe(testActivity2.id);
+      expect(result[2].order).toBe(2);
+    });
+
+    it('should throw BadRequestException when activityIds length does not match user favorites count', async () => {
+      // Add 3 favorites
+      await service.toggle(testUserId, testActivity.id);
+      await service.toggle(testUserId, testActivity2.id);
+      await service.toggle(testUserId, testActivity3.id);
+
+      // Try to reorder with only 2 IDs (partial array)
+      const partialOrder = [testActivity.id, testActivity2.id];
+
+      await expect(service.reorder(testUserId, partialOrder)).rejects.toThrow(
+        'Activity IDs count does not match your favorites count',
+      );
+    });
+
+    it('should throw BadRequestException when any ID does not belong to current user', async () => {
+      // User 1 adds 2 favorites
+      await service.toggle(testUserId, testActivity.id);
+      await service.toggle(testUserId, testActivity2.id);
+
+      // User 2 adds a different favorite
+      await service.toggle(testUserId2, testActivity3.id);
+
+      // User 1 tries to reorder including User 2's favorite activity
+      const invalidOrder = [testActivity.id, testActivity3.id];
+
+      await expect(service.reorder(testUserId, invalidOrder)).rejects.toThrow(
+        'One or more activity IDs do not belong to your favorites',
+      );
+    });
+
+    it('should throw BadRequestException when duplicate IDs are provided', async () => {
+      // Add 2 favorites
+      await service.toggle(testUserId, testActivity.id);
+      await service.toggle(testUserId, testActivity2.id);
+
+      // Try to reorder with duplicate IDs
+      const duplicateOrder = [testActivity.id, testActivity.id];
+
+      await expect(service.reorder(testUserId, duplicateOrder)).rejects.toThrow(
+        'Duplicate activity IDs provided',
+      );
+    });
+
+    it('should return updated favorites sorted by new order', async () => {
+      // Add favorites
+      await service.toggle(testUserId, testActivity.id); // order = 0
+      await service.toggle(testUserId, testActivity2.id); // order = 1
+
+      // Reorder to swap
+      const newOrder = [testActivity2.id, testActivity.id];
+      const result = await service.reorder(testUserId, newOrder);
+
+      // Result should be sorted by new order
+      expect(result[0].activity.toString()).toBe(testActivity2.id);
+      expect(result[1].activity.toString()).toBe(testActivity.id);
+
+      // Verify with findByUser that order persisted
+      const favorites = await service.findByUser(testUserId);
+      expect(favorites[0].activity.toString()).toBe(testActivity2.id);
+      expect(favorites[1].activity.toString()).toBe(testActivity.id);
+    });
+  });
+
+  describe('removeByActivity', () => {
+    it('should remove all favorites for a given activityId', async () => {
+      // User 1 and User 2 both favorite the same activity
+      await service.toggle(testUserId, testActivity.id);
+      await service.toggle(testUserId2, testActivity.id);
+
+      // Remove by activity
+      await service.removeByActivity(testActivity.id);
+
+      // Both users should have no favorite for this activity
+      const user1Favorites = await service.findByUser(testUserId);
+      const user2Favorites = await service.findByUser(testUserId2);
+
+      expect(user1Favorites).toHaveLength(0);
+      expect(user2Favorites).toHaveLength(0);
+    });
+
+    it('should not affect favorites for other activities', async () => {
+      // User favorites two different activities
+      await service.toggle(testUserId, testActivity.id);
+      await service.toggle(testUserId, testActivity2.id);
+
+      // Remove only activity1
+      await service.removeByActivity(testActivity.id);
+
+      // Activity2 should still be favorited
+      const favorites = await service.findByUser(testUserId);
+      expect(favorites).toHaveLength(1);
+      expect(favorites[0].activity.toString()).toBe(testActivity2.id);
+    });
+  });
 });

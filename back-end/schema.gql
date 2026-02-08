@@ -36,6 +36,7 @@ type Mutation {
   login(signInInput: SignInInput!): SignInDto!
   logout: Boolean!
   register(signUpInput: SignUpInput!): User!
+  reorderFavorites(activityIds: [String!]!): [Favorite!]!
   toggleFavorite(activityId: ID!): Boolean!
 }
 

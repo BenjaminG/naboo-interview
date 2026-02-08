@@ -54,4 +54,13 @@ export class FavoriteResolver {
   ): Promise<boolean> {
     return this.favoriteService.toggle(context.jwtPayload.id, activityId);
   }
+
+  @Mutation(() => [Favorite])
+  @UseGuards(AuthGuard)
+  async reorderFavorites(
+    @Context() context: ContextWithJWTPayload,
+    @Args('activityIds', { type: () => [String] }) activityIds: string[],
+  ): Promise<Favorite[]> {
+    return this.favoriteService.reorder(context.jwtPayload.id, activityIds);
+  }
 }

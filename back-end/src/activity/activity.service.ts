@@ -1,8 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
 import { Activity } from './activity.schema';
 import { CreateActivityInput } from './activity.inputs.dto';
+import { FavoriteService } from '../favorite/favorite.service';
 
 export interface PaginatedResult<T> {
   items: T[];
@@ -18,6 +24,8 @@ export class ActivityService {
   constructor(
     @InjectModel(Activity.name)
     private activityModel: Model<Activity>,
+    @Inject(forwardRef(() => FavoriteService))
+    private favoriteService: FavoriteService,
   ) {}
 
   async findAll(limit = 15, offset = 0): Promise<PaginatedResult<Activity>> {

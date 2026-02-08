@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Favorite } from './favorite.schema';
@@ -9,6 +14,7 @@ export class FavoriteService {
   constructor(
     @InjectModel(Favorite.name)
     private favoriteModel: Model<Favorite>,
+    @Inject(forwardRef(() => ActivityService))
     private activityService: ActivityService,
   ) {}
 
@@ -88,5 +94,64 @@ export class FavoriteService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Reorder favorites for a user.
+   * @param userId - The user ID
+   * @param activityIds - Complete array of activity IDs in new order
+   * @returns Updated favorites sorted by new order
+   */
+  async reorder(userId: string, activityIds: string[]): Promise<Favorite[]> {
+    // Check for duplicates
+    const uniqueIds = new Set(activityIds);
+    if (uniqueIds.size !== activityIds.length) {
+      throw new BadRequestException('Duplicate activity IDs provided');
+    }
+
+    // Get user's current favorites
+    const userFavorites = await this.favoriteModel
+      .find({ user: userId })
+      .lean();
+
+    // Validate count matches
+    if (activityIds.length !== userFavorites.length) {
+      throw new BadRequestException(
+        'Activity IDs count does not match your favorites count',
+      );
+    }
+
+    // Validate all IDs belong to user's favorites
+    const userActivityIds = new Set(
+      userFavorites.map((f) => f.activity.toString()),
+    );
+    for (const id of activityIds) {
+      if (!userActivityIds.has(id)) {
+        throw new BadRequestException(
+          'One or more activity IDs do not belong to your favorites',
+        );
+      }
+    }
+
+    // Update order using bulkWrite for single DB round trip
+    const bulkOps = activityIds.map((activityId, index) => ({
+      updateOne: {
+        filter: { user: userId, activity: activityId },
+        update: { $set: { order: index } },
+      },
+    }));
+
+    await this.favoriteModel.bulkWrite(bulkOps);
+
+    // Return updated favorites sorted by new order
+    return this.findByUser(userId);
+  }
+
+  /**
+   * Remove all favorites for a given activity (cascade deletion).
+   * @param activityId - The activity ID to remove favorites for
+   */
+  async removeByActivity(activityId: string): Promise<void> {
+    await this.favoriteModel.deleteMany({ activity: activityId });
   }
 }
