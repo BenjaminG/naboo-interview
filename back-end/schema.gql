@@ -29,6 +29,7 @@ type Mutation {
   login(signInInput: SignInInput!): SignInDto!
   logout: Boolean!
   register(signUpInput: SignUpInput!): User!
+  toggleFavorite(activityId: ID!): Boolean!
 }
 
 type PaginatedActivities {
