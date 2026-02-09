@@ -20,7 +20,7 @@ export class ActivityService {
     private activityModel: Model<Activity>,
   ) {}
 
-  async findAll(limit = 20, offset = 0): Promise<PaginatedResult<Activity>> {
+  async findAll(limit = 15, offset = 0): Promise<PaginatedResult<Activity>> {
     const [items, total] = await Promise.all([
       this.activityModel
         .find()
@@ -39,7 +39,7 @@ export class ActivityService {
 
   async findByUser(
     userId: string,
-    limit = 20,
+    limit = 15,
     offset = 0,
   ): Promise<PaginatedResult<Activity>> {
     const filter: FilterQuery<Activity> = { owner: userId };
@@ -81,7 +81,7 @@ export class ActivityService {
     city: string,
     activity?: string,
     price?: number,
-    limit = 20,
+    limit = 15,
     offset = 0,
   ): Promise<PaginatedResult<Activity>> {
     const filter: FilterQuery<Activity> = {

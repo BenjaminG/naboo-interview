@@ -251,9 +251,9 @@ describe('ActivityService - Pagination', () => {
       );
     });
 
-    it('should use default limit of 20 when not specified', async () => {
+    it('should use default limit of 15 when not specified', async () => {
       const result = await service.findAll();
-      expect(result.items).toHaveLength(20);
+      expect(result.items).toHaveLength(15);
       expect(result.total).toBe(25);
     });
 

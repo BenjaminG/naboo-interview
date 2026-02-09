@@ -37,9 +37,9 @@ type PaginatedActivities {
 }
 
 type Query {
-  getActivities(limit: Int = 20, offset: Int = 0): PaginatedActivities!
-  getActivitiesByCity(activity: String, city: String!, limit: Int = 20, offset: Int = 0, price: Int): PaginatedActivities!
-  getActivitiesByUser(limit: Int = 20, offset: Int = 0): PaginatedActivities!
+  getActivities(limit: Int = 15, offset: Int = 0): PaginatedActivities!
+  getActivitiesByCity(activity: String, city: String!, limit: Int = 15, offset: Int = 0, price: Int): PaginatedActivities!
+  getActivitiesByUser(limit: Int = 15, offset: Int = 0): PaginatedActivities!
   getActivity(id: String!): Activity!
   getCities: [String!]!
   getLatestActivities: [Activity!]!
