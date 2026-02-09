@@ -1,6 +1,7 @@
 import { ActionIcon, Center, Menu } from "@mantine/core";
 import { IconChevronDown } from "@tabler/icons-react";
 import Link from "next/link";
+import { DebugToggle } from "./DebugToggle";
 import { useTopbarStyles } from "./Topbar.styles";
 import { Route } from "./types";
 
@@ -38,13 +39,25 @@ export function MenuItem({ route, label, icon }: Route) {
         </p>
       </Menu.Target>
       <Menu.Dropdown>
-        {route.map((item) => (
-          <Menu.Item key={item.link}>
-            <Link href={item.link} className={classes.menuItemLink}>
-              {item.label}
-            </Link>
-          </Menu.Item>
-        ))}
+        {route.map((item, index) => {
+          const isLastItem = index === route.length - 1;
+          const isLogoutItem = item.link === "/logout";
+
+          return (
+            <div key={item.link}>
+              {isLastItem && isLogoutItem && (
+                <Menu.Item closeMenuOnClick={false}>
+                  <DebugToggle />
+                </Menu.Item>
+              )}
+              <Menu.Item>
+                <Link href={item.link} className={classes.menuItemLink}>
+                  {item.label}
+                </Link>
+              </Menu.Item>
+            </div>
+          );
+        })}
       </Menu.Dropdown>
     </Menu>
   );
