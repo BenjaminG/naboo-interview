@@ -29,6 +29,7 @@ const mockUser = {
   email: 'test@test.fr',
   firstName: 'Test',
   lastName: 'User',
+  role: 'user',
 };
 
 function createMockSigninResponse(): MockedResponse {
