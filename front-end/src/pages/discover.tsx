@@ -1,6 +1,7 @@
 import { Activity, EmptyData, PageTitle, ServiceErrorAlert } from "@/components";
 import { createSSRClient } from "@/graphql/apollo";
 import {
+  ActivityFragment as ActivityFragmentType,
   GetActivitiesQuery,
   GetActivitiesQueryVariables,
 } from "@/graphql/generated/types";
@@ -12,7 +13,7 @@ import Head from "next/head";
 import Link from "next/link";
 
 interface DiscoverProps {
-  activities: GetActivitiesQuery["getActivities"];
+  activities: ActivityFragmentType[];
   error?: boolean;
 }
 
@@ -27,7 +28,7 @@ export const getServerSideProps: GetServerSideProps<DiscoverProps> = async ({
     >({
       query: GetActivities,
     });
-    return { props: { activities: response.data.getActivities } };
+    return { props: { activities: response.data.getActivities.items } };
   } catch (error) {
     console.error("Failed to fetch activities:", error);
     return { props: { activities: [], error: true } };

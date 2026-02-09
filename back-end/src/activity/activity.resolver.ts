@@ -17,6 +17,8 @@ import { Activity } from './activity.schema';
 import { CreateActivityInput } from './activity.inputs.dto';
 import { User } from 'src/user/user.schema';
 import { ContextWithJWTPayload } from 'src/auth/types/context';
+import { PaginationArgs } from 'src/common/pagination.args';
+import { PaginatedActivities } from 'src/common/paginated-result.type';
 
 @Resolver(() => Activity)
 export class ActivityResolver {
@@ -42,9 +44,11 @@ export class ActivityResolver {
     return ctx.userLoader.load(ownerId);
   }
 
-  @Query(() => [Activity])
-  async getActivities(): Promise<Activity[]> {
-    return this.activityService.findAll();
+  @Query(() => PaginatedActivities)
+  async getActivities(
+    @Args() pagination: PaginationArgs,
+  ): Promise<PaginatedActivities> {
+    return this.activityService.findAll(pagination.limit, pagination.offset);
   }
 
   @Query(() => [Activity])
@@ -52,14 +56,19 @@ export class ActivityResolver {
     return this.activityService.findLatest();
   }
 
-  @Query(() => [Activity])
+  @Query(() => PaginatedActivities)
   @UseGuards(AuthGuard)
   async getActivitiesByUser(
     @Context() context: ContextWithJWTPayload,
-  ): Promise<Activity[]> {
+    @Args() pagination: PaginationArgs,
+  ): Promise<PaginatedActivities> {
     // AuthGuard ensures jwtPayload is defined
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.activityService.findByUser(context.jwtPayload!.id);
+    return this.activityService.findByUser(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      context.jwtPayload!.id,
+      pagination.limit,
+      pagination.offset,
+    );
   }
 
   @Query(() => [String])
@@ -68,13 +77,20 @@ export class ActivityResolver {
     return cities;
   }
 
-  @Query(() => [Activity])
+  @Query(() => PaginatedActivities)
   async getActivitiesByCity(
     @Args('city') city: string,
     @Args({ name: 'activity', nullable: true }) activity?: string,
     @Args({ name: 'price', nullable: true, type: () => Int }) price?: number,
-  ): Promise<Activity[]> {
-    return this.activityService.findByCity(city, activity, price);
+    @Args() pagination?: PaginationArgs,
+  ): Promise<PaginatedActivities> {
+    return this.activityService.findByCity(
+      city,
+      activity,
+      price,
+      pagination?.limit,
+      pagination?.offset,
+    );
   }
 
   @Query(() => Activity)

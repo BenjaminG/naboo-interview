@@ -18,7 +18,7 @@ const MyActivities = () => {
     GetUserActivitiesQueryVariables
   >(GetUserActivities);
 
-  const activities = data?.getActivitiesByUser ?? [];
+  const activities = data?.getActivitiesByUser?.items ?? [];
 
   return (
     <>

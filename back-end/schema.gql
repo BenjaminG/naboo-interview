@@ -31,10 +31,15 @@ type Mutation {
   register(signUpInput: SignUpInput!): User!
 }
 
+type PaginatedActivities {
+  items: [Activity!]!
+  total: Int!
+}
+
 type Query {
-  getActivities: [Activity!]!
-  getActivitiesByCity(activity: String, city: String!, price: Int): [Activity!]!
-  getActivitiesByUser: [Activity!]!
+  getActivities(limit: Int = 20, offset: Int = 0): PaginatedActivities!
+  getActivitiesByCity(activity: String, city: String!, limit: Int = 20, offset: Int = 0, price: Int): PaginatedActivities!
+  getActivitiesByUser(limit: Int = 20, offset: Int = 0): PaginatedActivities!
   getActivity(id: String!): Activity!
   getCities: [String!]!
   getLatestActivities: [Activity!]!

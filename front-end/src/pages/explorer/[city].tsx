@@ -1,6 +1,13 @@
-import { ActivityListItem, EmptyData, Filters, PageTitle, ServiceErrorAlert } from "@/components";
+import {
+  ActivityListItem,
+  EmptyData,
+  Filters,
+  PageTitle,
+  ServiceErrorAlert,
+} from "@/components";
 import { createSSRClient } from "@/graphql/apollo";
 import {
+  ActivityFragment as ActivityFragmentType,
   GetActivitiesByCityQuery,
   GetActivitiesByCityQueryVariables,
 } from "@/graphql/generated/types";
@@ -14,7 +21,7 @@ import { useQuery } from "@apollo/client";
 import { Fragment, useEffect, useState } from "react";
 
 interface CityDetailsProps {
-  activities: GetActivitiesByCityQuery["getActivitiesByCity"];
+  activities: ActivityFragmentType[];
   city: string;
   error?: boolean;
 }
@@ -47,7 +54,7 @@ export const getServerSideProps: GetServerSideProps<CityDetailsProps> = async ({
     });
     return {
       props: {
-        activities: response.data.getActivitiesByCity,
+        activities: response.data.getActivitiesByCity.items,
         city: params.city,
       },
     };
@@ -100,7 +107,7 @@ export default function ActivityDetails({
 
   const displayActivities =
     hasFilterChanged && clientData
-      ? clientData.getActivitiesByCity
+      ? clientData.getActivitiesByCity.items
       : activities;
 
   const displayError = error || !!clientError;

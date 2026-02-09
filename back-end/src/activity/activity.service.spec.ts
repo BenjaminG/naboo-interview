@@ -155,9 +155,9 @@ describe('ActivityService.findByCity - regex sanitization', () => {
   it('should treat ".*" as literal characters, not regex wildcards', async () => {
     // If not escaped, "Paris.*" would match any activity starting with "Paris"
     // When escaped, it should only match activities containing literal ".*"
-    const results = await service.findByCity('Paris', 'Paris.*');
-    expect(results.length).toBe(1);
-    expect(results[0].name).toBe('Paris.* Special');
+    const { items } = await service.findByCity('Paris', 'Paris.*');
+    expect(items.length).toBe(1);
+    expect(items[0].name).toBe('Paris.* Special');
   });
 
   it('should complete ReDoS payload "(a+)+$" in under 100ms', async () => {
@@ -168,32 +168,166 @@ describe('ActivityService.findByCity - regex sanitization', () => {
   });
 
   it('should return correct results for normal search "Walking"', async () => {
-    const results = await service.findByCity('Paris', 'Walking');
-    expect(results.length).toBe(1);
-    expect(results[0].name).toBe('Paris Walking Tour');
+    const { items } = await service.findByCity('Paris', 'Walking');
+    expect(items.length).toBe(1);
+    expect(items[0].name).toBe('Paris Walking Tour');
   });
 
   it('should return correct results for normal search "Tour"', async () => {
-    const results = await service.findByCity('Paris', 'Tour');
-    expect(results.length).toBe(1);
-    expect(results[0].name).toContain('Tour');
+    const { items } = await service.findByCity('Paris', 'Tour');
+    expect(items.length).toBe(1);
+    expect(items[0].name).toContain('Tour');
   });
 
   it('should handle unicode city names in search - Zürich', async () => {
-    const results = await service.findByCity('Zürich', 'Lake');
-    expect(results.length).toBe(1);
-    expect(results[0].name).toBe('Zürich Lake Cruise');
+    const { items } = await service.findByCity('Zürich', 'Lake');
+    expect(items.length).toBe(1);
+    expect(items[0].name).toBe('Zürich Lake Cruise');
   });
 
   it('should handle unicode city names in search - São Paulo', async () => {
-    const results = await service.findByCity('São Paulo', 'Adventure');
-    expect(results.length).toBe(1);
-    expect(results[0].name).toBe('São Paulo Adventure');
+    const { items } = await service.findByCity('São Paulo', 'Adventure');
+    expect(items.length).toBe(1);
+    expect(items[0].name).toBe('São Paulo Adventure');
   });
 
   it('should handle search with special regex chars in query', async () => {
     // Searching for "[abc]" should be literal, not a character class
-    const results = await service.findByCity('Paris', '[abc]');
-    expect(results.length).toBe(0);
+    const { items } = await service.findByCity('Paris', '[abc]');
+    expect(items.length).toBe(0);
+  });
+});
+
+describe('ActivityService - Pagination', () => {
+  let service: ActivityService;
+  let activityModel: Model<Activity>;
+  const testOwnerId = new Types.ObjectId();
+  const testUserId = new Types.ObjectId();
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      imports: [TestModule, ActivityModule],
+    }).compile();
+
+    service = module.get<ActivityService>(ActivityService);
+    activityModel = module.get<Model<Activity>>(getModelToken(Activity.name));
+
+    // Clean up and seed 25 test activities for pagination testing
+    await activityModel.deleteMany({});
+    const activities = [];
+    for (let i = 1; i <= 25; i++) {
+      activities.push({
+        name: `Activity ${i.toString().padStart(2, '0')}`,
+        city: i % 3 === 0 ? 'Paris' : i % 3 === 1 ? 'London' : 'Berlin',
+        price: i * 10,
+        description: `Description for activity ${i}`,
+        owner: i <= 10 ? testOwnerId : testUserId,
+        createdAt: new Date(Date.now() - i * 1000), // Stagger creation times
+      });
+    }
+    await activityModel.create(activities);
+  });
+
+  afterAll(async () => {
+    await closeInMongodConnection();
+  });
+
+  describe('findAll with pagination', () => {
+    it('should respect limit parameter', async () => {
+      const result = await service.findAll(5, 0);
+      expect(result.items).toHaveLength(5);
+      expect(result.total).toBe(25);
+    });
+
+    it('should respect offset parameter', async () => {
+      const firstPage = await service.findAll(5, 0);
+      const secondPage = await service.findAll(5, 5);
+
+      expect(firstPage.items).toHaveLength(5);
+      expect(secondPage.items).toHaveLength(5);
+      // Items should be different between pages
+      expect(firstPage.items[0]._id.toString()).not.toBe(
+        secondPage.items[0]._id.toString(),
+      );
+    });
+
+    it('should use default limit of 20 when not specified', async () => {
+      const result = await service.findAll();
+      expect(result.items).toHaveLength(20);
+      expect(result.total).toBe(25);
+    });
+
+    it('should return empty items when offset exceeds total', async () => {
+      const result = await service.findAll(10, 100);
+      expect(result.items).toHaveLength(0);
+      expect(result.total).toBe(25);
+    });
+
+    it('should return correct total count regardless of limit/offset', async () => {
+      const result1 = await service.findAll(5, 0);
+      const result2 = await service.findAll(10, 20);
+      expect(result1.total).toBe(25);
+      expect(result2.total).toBe(25);
+    });
+
+    it('should return remaining items when limit exceeds remaining', async () => {
+      const result = await service.findAll(10, 20);
+      expect(result.items).toHaveLength(5); // Only 5 remaining
+      expect(result.total).toBe(25);
+    });
+  });
+
+  describe('findByCity with pagination', () => {
+    it('should respect limit and offset with city filter', async () => {
+      // Paris has ~8 activities (every 3rd from 25)
+      const result = await service.findByCity(
+        'Paris',
+        undefined,
+        undefined,
+        3,
+        0,
+      );
+      expect(result.items).toHaveLength(3);
+      expect(result.items.every((a) => a.city === 'Paris')).toBe(true);
+    });
+
+    it('should return correct total for filtered results', async () => {
+      const result = await service.findByCity(
+        'Paris',
+        undefined,
+        undefined,
+        3,
+        0,
+      );
+      // Paris activities: 3, 6, 9, 12, 15, 18, 21, 24 = 8 total
+      expect(result.total).toBe(8);
+    });
+
+    it('should combine filters with pagination', async () => {
+      const result = await service.findByCity(
+        'Paris',
+        'Activity',
+        undefined,
+        2,
+        0,
+      );
+      expect(result.items).toHaveLength(2);
+      expect(result.items.every((a) => a.city === 'Paris')).toBe(true);
+      expect(result.items.every((a) => a.name.includes('Activity'))).toBe(true);
+    });
+  });
+
+  describe('findByUser with pagination', () => {
+    it('should respect limit and offset for user activities', async () => {
+      const result = await service.findByUser(testOwnerId.toString(), 5, 0);
+      expect(result.items).toHaveLength(5);
+      expect(result.total).toBe(10); // First 10 activities belong to testOwnerId
+    });
+
+    it('should return empty items when offset exceeds user total', async () => {
+      const result = await service.findByUser(testOwnerId.toString(), 5, 20);
+      expect(result.items).toHaveLength(0);
+      expect(result.total).toBe(10);
+    });
   });
 });

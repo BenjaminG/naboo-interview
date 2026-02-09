@@ -1,8 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { Activity } from './activity.schema';
 import { CreateActivityInput } from './activity.inputs.dto';
+
+export interface PaginatedResult<T> {
+  items: T[];
+  total: number;
+}
 
 export function escapeRegex(input: string): string {
   return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -15,19 +20,39 @@ export class ActivityService {
     private activityModel: Model<Activity>,
   ) {}
 
-  async findAll(): Promise<Activity[]> {
-    return this.activityModel.find().sort({ createdAt: -1 }).exec();
+  async findAll(limit = 20, offset = 0): Promise<PaginatedResult<Activity>> {
+    const [items, total] = await Promise.all([
+      this.activityModel
+        .find()
+        .sort({ createdAt: -1 })
+        .skip(offset)
+        .limit(limit)
+        .exec(),
+      this.activityModel.countDocuments().exec(),
+    ]);
+    return { items, total };
   }
 
   async findLatest(): Promise<Activity[]> {
     return this.activityModel.find().sort({ createdAt: -1 }).limit(3).exec();
   }
 
-  async findByUser(userId: string): Promise<Activity[]> {
-    return this.activityModel
-      .find({ owner: userId })
-      .sort({ createdAt: -1 })
-      .exec();
+  async findByUser(
+    userId: string,
+    limit = 20,
+    offset = 0,
+  ): Promise<PaginatedResult<Activity>> {
+    const filter: FilterQuery<Activity> = { owner: userId };
+    const [items, total] = await Promise.all([
+      this.activityModel
+        .find(filter)
+        .sort({ createdAt: -1 })
+        .skip(offset)
+        .limit(limit)
+        .exec(),
+      this.activityModel.countDocuments(filter).exec(),
+    ]);
+    return { items, total };
   }
 
   async findOne(id: string): Promise<Activity> {
@@ -56,18 +81,23 @@ export class ActivityService {
     city: string,
     activity?: string,
     price?: number,
-  ): Promise<Activity[]> {
-    return this.activityModel
-      .find({
-        $and: [
-          { city },
-          ...(price ? [{ price }] : []),
-          ...(activity
-            ? [{ name: { $regex: escapeRegex(activity), $options: 'i' } }]
-            : []),
-        ],
-      })
-      .exec();
+    limit = 20,
+    offset = 0,
+  ): Promise<PaginatedResult<Activity>> {
+    const filter: FilterQuery<Activity> = {
+      $and: [
+        { city },
+        ...(price ? [{ price }] : []),
+        ...(activity
+          ? [{ name: { $regex: escapeRegex(activity), $options: 'i' } }]
+          : []),
+      ],
+    };
+    const [items, total] = await Promise.all([
+      this.activityModel.find(filter).skip(offset).limit(limit).exec(),
+      this.activityModel.countDocuments(filter).exec(),
+    ]);
+    return { items, total };
   }
 
   async countDocuments(): Promise<number> {
