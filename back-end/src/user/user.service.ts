@@ -74,4 +74,14 @@ export class UserService {
     }
     return user;
   }
+
+  async findByIds(ids: string[]): Promise<(User | null)[]> {
+    const users = await this.userModel.find({ _id: { $in: ids } }).exec();
+
+    // Create a map for O(1) lookup
+    const userMap = new Map(users.map((user) => [user.id, user]));
+
+    // Return users in the same order as requested IDs, with null for missing
+    return ids.map((id) => userMap.get(id) ?? null);
+  }
 }

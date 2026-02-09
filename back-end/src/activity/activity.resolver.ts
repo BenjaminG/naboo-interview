@@ -12,7 +12,6 @@ import {
 import { UseGuards } from '@nestjs/common';
 import { ActivityService } from './activity.service';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { UserService } from 'src/user/user.service';
 import { Activity } from './activity.schema';
 
 import { CreateActivityInput } from './activity.inputs.dto';
@@ -21,20 +20,26 @@ import { ContextWithJWTPayload } from 'src/auth/types/context';
 
 @Resolver(() => Activity)
 export class ActivityResolver {
-  constructor(
-    private readonly activityService: ActivityService,
-    private readonly userServices: UserService,
-  ) {}
+  constructor(private readonly activityService: ActivityService) {}
 
   @ResolveField(() => ID)
   id(@Parent() activity: Activity): string {
     return activity._id.toString();
   }
 
-  @ResolveField(() => User)
-  async owner(@Parent() activity: Activity): Promise<User> {
-    await activity.populate('owner');
-    return activity.owner;
+  @ResolveField(() => User, { nullable: true })
+  async owner(
+    @Parent() activity: Activity,
+    @Context() ctx: ContextWithJWTPayload,
+  ): Promise<User | null> {
+    // Extract the owner ID from the activity (stored as ObjectId)
+    const ownerId = (
+      activity.owner as unknown as { toString(): string }
+    )?.toString();
+    if (!ownerId) {
+      return null;
+    }
+    return ctx.userLoader.load(ownerId);
   }
 
   @Query(() => [Activity])

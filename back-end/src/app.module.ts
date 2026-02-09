@@ -11,6 +11,8 @@ import { MeModule } from './me/me.module';
 import { SeedModule } from './seed/seed.module';
 import { SeedService } from './seed/seed.service';
 import { UserModule } from './user/user.module';
+import { UserService } from './user/user.service';
+import { createUserLoader } from './user/user.loader';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { JwtModule, JwtService } from '@nestjs/jwt';
@@ -49,11 +51,12 @@ export async function verifyJwtToken(
     ]),
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      imports: [JwtModule],
-      inject: [JwtService, ConfigService],
+      imports: [JwtModule, UserModule],
+      inject: [JwtService, ConfigService, UserService],
       useFactory: async (
         jwtService: JwtService,
         configService: ConfigService,
+        userService: UserService,
       ) => {
         const secret = configService.get<string>('JWT_SECRET');
         return {
@@ -71,10 +74,14 @@ export async function verifyJwtToken(
               secret ?? '',
             );
 
+            // Create a fresh DataLoader per request to avoid caching across requests
+            const userLoader = createUserLoader(userService);
+
             return {
               jwtPayload,
               req,
               res,
+              userLoader,
             };
           },
         };

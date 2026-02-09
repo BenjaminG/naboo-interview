@@ -154,3 +154,42 @@
 - Security: XSS attacks can no longer steal JWT from localStorage
 
 ---
+
+## 2026-02-09 - US-003: Fix N+1 Query on Activity Owner via DataLoader
+
+**Completed:**
+- Installed `dataloader` package as production dependency
+- Added `findByIds` method to UserService for batch fetching users by IDs
+- Created `createUserLoader` factory in `back-end/src/user/user.loader.ts`
+- Integrated DataLoader into GraphQL context factory (new instance per request)
+- Extended `ContextWithJWTPayload` type with `userLoader` field
+- Refactored `ActivityResolver.owner` to use DataLoader instead of `populate('owner')`
+- Updated `@ResolveField` to `nullable: true` for graceful null handling
+
+**Files Changed:**
+- `back-end/package.json` (modified) - Added dataloader dependency
+- `back-end/src/user/user.service.ts` (modified) - Added `findByIds` method
+- `back-end/src/user/user.loader.ts` (new) - DataLoader factory function
+- `back-end/src/user/user.loader.spec.ts` (new) - 5 comprehensive DataLoader tests
+- `back-end/src/auth/types/context.ts` (modified) - Added userLoader to context type
+- `back-end/src/app.module.ts` (modified) - Inject UserService, create userLoader per request
+- `back-end/src/activity/activity.resolver.ts` (modified) - Use DataLoader for owner resolution
+
+**Tests Added:**
+- `should batch multiple user loads into a single findByIds call`
+- `should deduplicate loads for the same user ID`
+- `should return null for non-existent user IDs`
+- `should preserve order of results matching input IDs`
+- `should handle a mix of existing and non-existing users`
+
+**Learnings:**
+- DataLoader `import * as DataLoader from 'dataloader'` for CommonJS interop in NestJS
+- DataLoader's batch function receives readonly array, cast to `string[]` for service call
+- Order preservation in `findByIds` is critical - use Map for O(1) lookup then reconstruct order
+
+**Constitution Compliance:**
+- TDD: Wrote 5 failing tests first, then implemented to make them pass
+- Minimal changes: Focused solely on DataLoader integration, no schema changes
+- Performance: N+1 queries eliminated - multiple activities with same owner = single DB lookup
+
+---
