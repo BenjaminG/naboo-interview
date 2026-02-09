@@ -144,7 +144,6 @@ describe('DebugContext', () => {
 
   describe('context default values', () => {
     it('provides default context when used outside provider', () => {
-      // Using DebugContext directly without provider should use defaults
       function DirectContextComponent() {
         const { isDebugMode, toggleDebugMode } = useContext(DebugContext);
         return (
@@ -159,15 +158,12 @@ describe('DebugContext', () => {
 
       render(<DirectContextComponent />);
 
-      // Default should be false
       expect(screen.getByTestId('debug-mode').textContent).toBe('false');
 
-      // Toggle should be a no-op function
       act(() => {
         fireEvent.click(screen.getByTestId('toggle-btn'));
       });
 
-      // Should still be false after toggle (no-op)
       expect(screen.getByTestId('debug-mode').textContent).toBe('false');
     });
   });

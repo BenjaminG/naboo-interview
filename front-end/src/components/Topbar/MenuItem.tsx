@@ -17,6 +17,7 @@ export function MenuItem({ route, label, icon }: Route) {
   const theme = useMantineTheme();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const primaryColor = theme.colors[theme.primaryColor][6];
 
   return typeof route === "string" ? (
     <Link href={route} className={classes.link}>
@@ -48,10 +49,9 @@ export function MenuItem({ route, label, icon }: Route) {
         </p>
       </Menu.Target>
       <Menu.Dropdown>
-        {route.map((item, index) => {
+        {route.map((item) => {
           const isLogoutItem = item.link === "/logout";
           const ItemIcon = MENU_ITEM_ICONS[item.link];
-          const primaryColor = theme.colors[theme.primaryColor][6];
 
           return (
             <div key={item.link}>

@@ -7,7 +7,7 @@ const formatter = new Intl.DateTimeFormat('fr-FR', {
 export function formatDebugDate(
   dateInput: string | null | undefined
 ): string | null {
-  if (dateInput === null || dateInput === undefined) {
+  if (dateInput == null) {
     return null;
   }
 

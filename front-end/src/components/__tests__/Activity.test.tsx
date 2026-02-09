@@ -81,7 +81,7 @@ describe('Activity debug badge', () => {
         activity: baseActivity,
       });
 
-      expect(screen.getByText('Créé le 15 janv. 2026')).toBeInTheDocument();
+      expect(screen.getByText('15 janv. 2026')).toBeInTheDocument();
     });
 
     it('does NOT show debug badge when debug mode is off', () => {
@@ -91,7 +91,7 @@ describe('Activity debug badge', () => {
         activity: baseActivity,
       });
 
-      expect(screen.queryByText(/Créé le/)).not.toBeInTheDocument();
+      expect(screen.queryByText('15 janv. 2026')).not.toBeInTheDocument();
     });
 
     it('does NOT show debug badge for non-admin user even with debug mode on', () => {
@@ -101,7 +101,7 @@ describe('Activity debug badge', () => {
         activity: baseActivity,
       });
 
-      expect(screen.queryByText(/Créé le/)).not.toBeInTheDocument();
+      expect(screen.queryByText('15 janv. 2026')).not.toBeInTheDocument();
     });
 
     it('does NOT show debug badge when createdAt is null', () => {
@@ -116,7 +116,7 @@ describe('Activity debug badge', () => {
         activity: activityWithoutCreatedAt,
       });
 
-      expect(screen.queryByText(/Créé le/)).not.toBeInTheDocument();
+      expect(screen.queryByText('15 janv. 2026')).not.toBeInTheDocument();
     });
 
     it('does NOT show debug badge for unauthenticated user', () => {
@@ -126,7 +126,7 @@ describe('Activity debug badge', () => {
         activity: baseActivity,
       });
 
-      expect(screen.queryByText(/Créé le/)).not.toBeInTheDocument();
+      expect(screen.queryByText('15 janv. 2026')).not.toBeInTheDocument();
     });
   });
 
@@ -140,7 +140,7 @@ describe('Activity debug badge', () => {
         activity: baseActivity,
       });
 
-      expect(screen.queryByText(/Créé le/)).not.toBeInTheDocument();
+      expect(screen.queryByText('15 janv. 2026')).not.toBeInTheDocument();
 
       localStorage.removeItem('debug_mode');
     });
@@ -157,7 +157,7 @@ describe('Activity debug badge', () => {
       expect(screen.getByText('Test Activity')).toBeInTheDocument();
       expect(screen.getByText('Paris')).toBeInTheDocument();
       expect(screen.getByText('100€/j')).toBeInTheDocument();
-      expect(screen.queryByText(/Créé le/)).not.toBeInTheDocument();
+      expect(screen.queryByText('15 janv. 2026')).not.toBeInTheDocument();
     });
   });
 });
