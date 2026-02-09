@@ -12,10 +12,12 @@ import {
 } from "./validationRules";
 import { useMutation } from "@apollo/client";
 import CreateActivity from "@/graphql/mutations/activity/createActivity";
+import GetUserActivities from "@/graphql/queries/activity/getUserActivities";
 import {
   CreateActivityInput,
   CreateActivityMutation,
   CreateActivityMutationVariables,
+  GetUserActivitiesQuery,
 } from "@/graphql/generated/types";
 
 type SelectData = {
@@ -40,7 +42,7 @@ export default function ActivityForm() {
     CreateActivityMutation,
     CreateActivityMutationVariables
   >(CreateActivity, {
-    refetchQueries: ['GetActivities', 'GetLatestActivities', 'GetActivitiesByCity'],
+    refetchQueries: ['GetActivities', 'GetLatestActivities', 'GetActivitiesByCity', 'GetUserActivities'],
   });
 
   const form = useForm<CreateActivityInput>({
@@ -76,6 +78,23 @@ export default function ActivityForm() {
       await createActivity({
         variables: {
           createActivityInput: { ...values, price: Number(values.price) },
+        },
+        update(cache, { data }) {
+          if (!data?.createActivity) return;
+          const existing = cache.readQuery<GetUserActivitiesQuery>({
+            query: GetUserActivities,
+          });
+          if (!existing?.getActivitiesByUser) return;
+          cache.writeQuery<GetUserActivitiesQuery>({
+            query: GetUserActivities,
+            data: {
+              getActivitiesByUser: {
+                ...existing.getActivitiesByUser,
+                items: [data.createActivity, ...existing.getActivitiesByUser.items],
+                total: existing.getActivitiesByUser.total + 1,
+              },
+            },
+          });
         },
       });
       router.back();
