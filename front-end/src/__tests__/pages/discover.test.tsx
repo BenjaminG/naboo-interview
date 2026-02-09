@@ -2,19 +2,23 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 const mockQuery = vi.fn();
-const mockCreateSSRClient = vi.fn(() => ({ query: mockQuery }));
+const mockCreateSSRClient = vi.fn((_cookie?: string) => ({ query: mockQuery }));
 const mockClientSideQuery = vi.fn();
 const mockGetClientSideClient = vi.fn(() => ({ query: mockClientSideQuery }));
 
 vi.mock("@/graphql/apollo", () => ({
-  createSSRClient: (...args: unknown[]) => mockCreateSSRClient(...args),
+  createSSRClient: (cookie?: string) => mockCreateSSRClient(cookie),
   getClientSideClient: () => mockGetClientSideClient(),
   graphqlClient: { query: vi.fn() },
 }));
 
-vi.mock("@/hooks", () => ({
-  useAuth: () => ({ user: null }),
-}));
+vi.mock("@/hooks", async () => {
+  const actual = await vi.importActual<typeof import("@/hooks")>("@/hooks");
+  return {
+    ...actual,
+    useAuth: () => ({ user: null }),
+  };
+});
 
 vi.mock("@mantine/core", () => ({
   Box: ({ children, ...props }: { children: React.ReactNode }) => (

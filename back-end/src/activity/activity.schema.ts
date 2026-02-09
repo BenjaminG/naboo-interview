@@ -31,7 +31,7 @@ export class Activity extends Document {
     ref: 'User',
     required: true,
   })
-  owner!: User;
+  owner!: mongoose.Types.ObjectId;
 
   @Field(() => Date, { nullable: true })
   createdAt!: Date;

@@ -17,6 +17,7 @@ import { Activity } from './activity.schema';
 import { CreateActivityInput } from './activity.inputs.dto';
 import { User } from 'src/user/user.schema';
 import { ContextWithJWTPayload } from 'src/auth/types/context';
+import { getAuthPayload } from 'src/auth/utils/getAuthPayload';
 import { PaginationArgs } from 'src/common/pagination.args';
 import { PaginatedActivities } from 'src/common/paginated-result.type';
 
@@ -34,10 +35,7 @@ export class ActivityResolver {
     @Parent() activity: Activity,
     @Context() ctx: ContextWithJWTPayload,
   ): Promise<User | null> {
-    // Extract the owner ID from the activity (stored as ObjectId)
-    const ownerId = (
-      activity.owner as unknown as { toString(): string }
-    )?.toString();
+    const ownerId = activity.owner?.toString();
     if (!ownerId) {
       return null;
     }
@@ -62,10 +60,8 @@ export class ActivityResolver {
     @Context() context: ContextWithJWTPayload,
     @Args() pagination: PaginationArgs,
   ): Promise<PaginatedActivities> {
-    // AuthGuard ensures jwtPayload is defined
     return this.activityService.findByUser(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      context.jwtPayload!.id,
+      getAuthPayload(context).id,
       pagination.limit,
       pagination.offset,
     );
@@ -104,8 +100,9 @@ export class ActivityResolver {
     @Context() context: ContextWithJWTPayload,
     @Args('createActivityInput') createActivity: CreateActivityInput,
   ): Promise<Activity> {
-    // AuthGuard ensures jwtPayload is defined
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.activityService.create(context.jwtPayload!.id, createActivity);
+    return this.activityService.create(
+      getAuthPayload(context).id,
+      createActivity,
+    );
   }
 }

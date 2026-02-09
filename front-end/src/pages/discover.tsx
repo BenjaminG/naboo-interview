@@ -1,18 +1,16 @@
 import { Activity, EmptyData, PageTitle, ServiceErrorAlert } from "@/components";
-import { createSSRClient, getClientSideClient } from "@/graphql/apollo";
+import { createSSRClient } from "@/graphql/apollo";
 import {
   ActivityFragment as ActivityFragmentType,
   GetActivitiesQuery,
   GetActivitiesQueryVariables,
 } from "@/graphql/generated/types";
 import GetActivities from "@/graphql/queries/activity/getActivities";
-import { useAuth } from "@/hooks";
+import { useAuth, useLoadMore } from "@/hooks";
 import { Box, Button, Grid, Group, Text } from "@mantine/core";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
 const PAGE_SIZE = 15;
 
 interface DiscoverProps {
@@ -44,47 +42,23 @@ export const getServerSideProps: GetServerSideProps<DiscoverProps> = async ({
   }
 };
 
+const getResult = (data: GetActivitiesQuery) => data.getActivities;
+
 export default function Discover({ activities, total, error }: DiscoverProps) {
   const { user } = useAuth();
-  const [displayedActivities, setDisplayedActivities] =
-    useState<ActivityFragmentType[]>(activities);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [loadError, setLoadError] = useState(false);
-
-  useEffect(() => {
-    setDisplayedActivities(activities);
-    setLoadError(false);
-  }, [activities]);
-
-  const hasMore = displayedActivities.length < total;
-
-  const handleLoadMore = async () => {
-    setLoadingMore(true);
-    setLoadError(false);
-    try {
-      const client = getClientSideClient();
-      const { data } = await client.query<
-        GetActivitiesQuery,
-        GetActivitiesQueryVariables
-      >({
-        query: GetActivities,
-        variables: {
-          limit: PAGE_SIZE,
-          offset: displayedActivities.length,
-        },
-        fetchPolicy: "network-only",
-      });
-      setDisplayedActivities((prev) => [
-        ...prev,
-        ...data.getActivities.items,
-      ]);
-    } catch (err) {
-      console.error("Failed to load more activities:", err);
-      setLoadError(true);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
+  const {
+    items: displayedActivities,
+    loadingMore,
+    loadError,
+    hasMore,
+    loadMore,
+  } = useLoadMore<GetActivitiesQuery, ActivityFragmentType>({
+    query: GetActivities,
+    initialItems: activities,
+    initialTotal: total,
+    pageSize: PAGE_SIZE,
+    getResult,
+  });
 
   return (
     <>
@@ -128,10 +102,10 @@ export default function Discover({ activities, total, error }: DiscoverProps) {
               size="md"
               radius="xl"
               loading={loadingMore}
-              onClick={handleLoadMore}
+              onClick={loadMore}
               sx={(theme) => ({
-                paddingLeft: theme.spacing.xl * 2,
-                paddingRight: theme.spacing.xl * 2,
+                paddingLeft: `calc(${theme.spacing.xl} * 2)`,
+                paddingRight: `calc(${theme.spacing.xl} * 2)`,
                 borderWidth: 2,
                 "&:hover": {
                   backgroundColor: theme.colors.teal[0],
