@@ -1,49 +1,35 @@
 import { useAuth, useDebugMode } from "@/hooks";
-import { Box, Switch } from "@mantine/core";
-
-const AMBER = "#F59E0B";
-const DEBUG_FONT =
-  "'JetBrains Mono', 'Fira Code', 'Courier New', monospace";
+import { Group, Switch, useMantineTheme } from "@mantine/core";
+import { IconSettings } from "@tabler/icons-react";
 
 export function DebugToggle() {
   const { user } = useAuth();
   const { isDebugMode, toggleDebugMode } = useDebugMode();
+  const theme = useMantineTheme();
 
   if (!user || user.role !== "admin") {
     return null;
   }
 
+  const primaryColor = theme.colors[theme.primaryColor][6];
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "8px 12px",
-        minWidth: 140,
-      }}
-    >
-      <span
-        style={{
-          fontFamily: DEBUG_FONT,
-          fontSize: "0.875rem",
-          color: isDebugMode ? AMBER : "#6b7280",
-          fontWeight: isDebugMode ? 600 : 400,
-        }}
-      >
-        Debug
-      </span>
+    <Group position="apart" noWrap spacing="xs" sx={{ width: "100%" }}>
+      <Group spacing={10} noWrap>
+        <IconSettings size="1rem" stroke={1.5} color={theme.colors.gray[6]} />
+        <span>Debug</span>
+      </Group>
       <Switch
         checked={isDebugMode}
         onChange={toggleDebugMode}
         size="sm"
         styles={{
           track: {
-            backgroundColor: isDebugMode ? AMBER : undefined,
-            borderColor: isDebugMode ? AMBER : undefined,
+            backgroundColor: isDebugMode ? primaryColor : undefined,
+            borderColor: isDebugMode ? primaryColor : undefined,
           },
         }}
       />
-    </Box>
+    </Group>
   );
 }

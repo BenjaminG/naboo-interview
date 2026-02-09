@@ -11,6 +11,7 @@ import {
   Image,
   Text,
 } from "@mantine/core";
+import { IconCalendar } from "@tabler/icons-react";
 import Link from "next/link";
 
 interface ActivityProps {
@@ -39,15 +40,16 @@ export function Activity({ activity }: ActivityProps) {
             <Box
               sx={{
                 position: "absolute",
-                top: 8,
+                bottom: 8,
                 left: 8,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
                 backgroundColor: "rgba(0, 0, 0, 0.75)",
-                color: "#F59E0B",
-                fontFamily:
-                  "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
-                fontSize: 11,
+                color: "#fff",
+                fontSize: 12,
                 fontWeight: 500,
-                padding: "4px 8px",
+                padding: "4px 10px",
                 borderRadius: 12,
                 animation: "debugBadgeFadeIn 200ms ease-out",
                 "@keyframes debugBadgeFadeIn": {
@@ -62,6 +64,7 @@ export function Activity({ activity }: ActivityProps) {
                 },
               }}
             >
+              <IconCalendar size={14} stroke={1.5} />
               {debugDate}
             </Box>
           )}

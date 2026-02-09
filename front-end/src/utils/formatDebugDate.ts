@@ -12,5 +12,5 @@ export function formatDebugDate(
   }
 
   const date = new Date(dateInput);
-  return `Créé le ${formatter.format(date)}`;
+  return formatter.format(date);
 }
