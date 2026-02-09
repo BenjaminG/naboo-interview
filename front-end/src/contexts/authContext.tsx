@@ -15,6 +15,7 @@ import Signin from "@/graphql/mutations/auth/signin";
 import Signup from "@/graphql/mutations/auth/signup";
 import GetUser from "@/graphql/queries/auth/getUser";
 import { useSnackbar } from "@/hooks";
+import { extractErrorMessage } from "@/utils/extractErrorMessage";
 import { useApolloClient, useLazyQuery, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
 import {
@@ -87,7 +88,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         );
         router.push("/profil");
       } catch (err) {
-        snackbarRef.current.error("Une erreur est survenue");
+        snackbarRef.current.error(extractErrorMessage(err));
       } finally {
         setIsLoading(false);
       }
@@ -102,7 +103,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         await signup({ variables: { signUpInput: input } });
         router.push("/signin");
       } catch (err) {
-        snackbarRef.current.error("Une erreur est survenue");
+        snackbarRef.current.error(extractErrorMessage(err));
       } finally {
         setIsLoading(false);
       }
@@ -119,7 +120,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await client.clearStore();
       router.push("/");
     } catch (err) {
-      snackbarRef.current.error("Une erreur est survenue");
+      snackbarRef.current.error(extractErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
