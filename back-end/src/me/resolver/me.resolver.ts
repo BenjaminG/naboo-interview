@@ -14,6 +14,6 @@ export class MeResolver {
   async getMe(@Context() context: ContextWithJWTPayload): Promise<User> {
     // the AuthGard will add the user to the context
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.userService.getById(context.jwtPayload.id);
+    return this.userService.getById(context.jwtPayload!.id);
   }
 }

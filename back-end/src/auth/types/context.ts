@@ -1,6 +1,8 @@
+import { Request, Response } from 'express';
 import { PayloadDto } from './jwtPayload.dto';
 
 export interface ContextWithJWTPayload {
-  jwtPayload: PayloadDto;
-  // Add other properties you expect in the context here
+  jwtPayload: PayloadDto | null;
+  req: Request;
+  res: Response;
 }

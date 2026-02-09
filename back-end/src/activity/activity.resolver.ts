@@ -52,7 +52,9 @@ export class ActivityResolver {
   async getActivitiesByUser(
     @Context() context: ContextWithJWTPayload,
   ): Promise<Activity[]> {
-    return this.activityService.findByUser(context.jwtPayload.id);
+    // AuthGuard ensures jwtPayload is defined
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.activityService.findByUser(context.jwtPayload!.id);
   }
 
   @Query(() => [String])
@@ -81,6 +83,8 @@ export class ActivityResolver {
     @Context() context: ContextWithJWTPayload,
     @Args('createActivityInput') createActivity: CreateActivityInput,
   ): Promise<Activity> {
-    return this.activityService.create(context.jwtPayload.id, createActivity);
+    // AuthGuard ensures jwtPayload is defined
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.activityService.create(context.jwtPayload!.id, createActivity);
   }
 }
