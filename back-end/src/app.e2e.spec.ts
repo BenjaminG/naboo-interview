@@ -75,6 +75,7 @@ describe('App e2e', () => {
               email
               firstName
               lastName
+              role
             }
           }
         `,
@@ -86,6 +87,7 @@ describe('App e2e', () => {
       email,
       firstName: 'firstName',
       lastName: 'lastName',
+      role: 'user',
     });
   });
 });
