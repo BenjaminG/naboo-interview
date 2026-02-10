@@ -6,6 +6,7 @@ import { User, UserSchema } from 'src/user/user.schema';
 import { UserService } from 'src/user/user.service';
 import { ActivityModule } from '../activity/activity.module';
 import { UserModule } from '../user/user.module';
+import { FavoriteModule } from '../favorite/favorite.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { UserModule } from '../user/user.module';
     ]),
     UserModule,
     ActivityModule,
+    FavoriteModule,
   ],
   providers: [UserService, ActivityService],
 })

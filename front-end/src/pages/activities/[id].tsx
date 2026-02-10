@@ -1,4 +1,4 @@
-import { PageTitle } from "@/components";
+import { FavoriteButton, PageTitle } from "@/components";
 import { createSSRClient } from "@/graphql/apollo";
 import {
   GetActivityQuery,
@@ -42,7 +42,10 @@ export default function ActivityDetails({ activity }: ActivityDetailsProps) {
       <Head>
         <title>{activity.name} | CDTR</title>
       </Head>
-      <PageTitle title={activity.name} prevPath={router.back} />
+      <Group position="apart" align="center" mb="md">
+        <PageTitle title={activity.name} prevPath={router.back} />
+        <FavoriteButton activityId={activity.id} />
+      </Group>
       <Grid>
         <Grid.Col span={7}>
           <Image

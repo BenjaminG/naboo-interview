@@ -2,6 +2,7 @@ export * from "./Activity";
 export * from "./ActivityListItem";
 export * from "./City";
 export * from "./EmptyData";
+export * from "./FavoriteButton";
 export * from "./Filters";
 export * from "./Form";
 export * from "./PageTitle";
