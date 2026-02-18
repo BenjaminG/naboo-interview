@@ -12,6 +12,7 @@ import { UseGuards } from '@nestjs/common';
 import { FavoriteService } from './favorite.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { ContextWithJWTPayload } from '../auth/types/context';
+import { getAuthPayload } from '../auth/utils/getAuthPayload';
 import { Favorite } from './favorite.schema';
 import { Activity } from '../activity/activity.schema';
 
@@ -35,7 +36,7 @@ export class FavoriteResolver {
   async getMyFavorites(
     @Context() context: ContextWithJWTPayload,
   ): Promise<Favorite[]> {
-    return this.favoriteService.findByUser(context.jwtPayload!.id);
+    return this.favoriteService.findByUser(getAuthPayload(context).id);
   }
 
   @Query(() => [String])
@@ -43,7 +44,7 @@ export class FavoriteResolver {
   async getMyFavoritedActivityIds(
     @Context() context: ContextWithJWTPayload,
   ): Promise<string[]> {
-    return this.favoriteService.findFavoritedActivityIds(context.jwtPayload!.id);
+    return this.favoriteService.findFavoritedActivityIds(getAuthPayload(context).id);
   }
 
   @Mutation(() => Boolean)
@@ -52,7 +53,7 @@ export class FavoriteResolver {
     @Context() context: ContextWithJWTPayload,
     @Args('activityId', { type: () => ID }) activityId: string,
   ): Promise<boolean> {
-    return this.favoriteService.toggle(context.jwtPayload!.id, activityId);
+    return this.favoriteService.toggle(getAuthPayload(context).id, activityId);
   }
 
   @Mutation(() => [Favorite])
@@ -61,6 +62,6 @@ export class FavoriteResolver {
     @Context() context: ContextWithJWTPayload,
     @Args('activityIds', { type: () => [String] }) activityIds: string[],
   ): Promise<Favorite[]> {
-    return this.favoriteService.reorder(context.jwtPayload!.id, activityIds);
+    return this.favoriteService.reorder(getAuthPayload(context).id, activityIds);
   }
 }
